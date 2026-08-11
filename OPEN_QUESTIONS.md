@@ -10,7 +10,7 @@
 ## Action Items
 
 ### Network & Infrastructure
-- [ ] **Devin:** Expose PostgreSQL in OpenShift Emerald via Load Balancer, provide external IP/hostname
+- [ ] **Declan:** Expose PostgreSQL in OpenShift Emerald via Load Balancer, provide external IP/hostname
 - [ ] **Infra:** Submit firewall request: Beach (`beach.idir.bcgov`) → PostgreSQL LB (port 5432)
 - [ ] **Infra:** Complete network diagram with all IPs
 
