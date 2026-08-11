@@ -2,25 +2,23 @@
 
 ## Open Questions
 
-- [ ] **Oracle data location** — Confirm with Cindy's team where exactly in the DW the BCSS Stats data should land
-- [ ] **BI team access** — How will the BI team reliably access the data?
-- [ ] **Data sensitivity review** — Any stats fields that should be excluded or masked before export?
-- [ ] **PostgreSQL service account** — What credentials will SSIS use to connect to PostgreSQL?
+- [ ] **SS-1024:** Confirm Oracle DW location for BCSS Stats data (Cindy's team)
+- [ ] **SS-1025:** Define BI team access method for BCSS Stats data
+- [ ] **SS-1026:** Create PostgreSQL service account for SSIS
 
 ## Action Items
 
 ### Network & Infrastructure
-- [ ] **Declan:** Expose PostgreSQL in OpenShift Emerald via Load Balancer, provide external IP/hostname
-- [ ] **Infra:** Submit firewall request: Beach (`beach.idir.bcgov`) → PostgreSQL LB (port 5432)
-- [ ] **Infra:** Complete network diagram with all IPs
+- [ ] **SS-1027:** Expose PostgreSQL via Load Balancer in OpenShift Emerald (Declan)
+- [ ] **SS-1028:** Submit firewall request — Beach to PostgreSQL LB (Infra)
+- [ ] **SS-1029:** Complete network architecture diagram with IPs (Infra)
 
 ### Oracle
-- [ ] **DBA:** Create BCSS user/schema on bidevv, bitstv, biprdv
-- [ ] **DBA:** Run `DDL/Oracle/bcss-create-tables.sql` to create target tables
+- [ ] **SS-1030:** Create BCSS Oracle user/schema on bidevv, bitstv, biprdv (DBA)
 
 ### SSIS Server (Beach)
-- [ ] Install PostgreSQL Unicode ODBC driver on Beach
-- [ ] Create file share `\\ETL\BCBI\BCSS\{Dev,Test,Prod}` and grant `IDIR\CATSDEPL` access
+- [ ] **SS-1031:** Install PostgreSQL ODBC driver on Beach (Infra/DBA)
+- [ ] **SS-1033:** Create SSIS file share for BCSS on Beach (Infra)
 
 ### CI/CD
-- [ ] Create BCSS Stats ETL Jenkins project (similar to PCSS-BI)
+- [ ] **SS-1032:** Create BCSS Stats ETL Jenkins project
