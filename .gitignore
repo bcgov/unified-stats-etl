@@ -1,0 +1,59 @@
+# SSIS / Visual Studio
+*.dtproj.user
+*.dtsx.user
+*.database
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+bin/
+obj/
+packages/
+*.ispac
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Sensitive files — never commit these
+*.env
+*.env.*
+appsettings.*.json
+!appsettings.json
+ConnectionStrings.config
+*.pfx
+*.key
+*.pem
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Test data — never commit real data
+testdata/
+sampledata/
+*.csv
+*.xlsx
+*.xls
+
+# Jenkins
+.jenkins/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
