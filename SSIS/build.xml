@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ====================================================================== -->
+<!-- BCSS Stats ETL - MSBuild configuration for Jenkins CI/CD              -->
+<!-- Pattern: Same as PCSS build.xml                                       -->
+<!-- Jenkins calls MSBuild with this file to build the .ispac deployment   -->
+<!-- package, which is then deployed to the SSIS server.                   -->
+<!-- ====================================================================== -->
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Development</Configuration>
+    <ProjectFile>BCSS.Stats.Ssis\BCSS.Stats.Ssis.dtproj</ProjectFile>
+    <OutputPath>BCSS.Stats.Ssis\bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <Target Name="Build">
+    <Message Text="Building BCSS Stats SSIS Project - Configuration: $(Configuration)" />
+    <MSBuild Projects="$(ProjectFile)"
+             Properties="Configuration=$(Configuration)"
+             Targets="Build" />
+  </Target>
+
+  <Target Name="Clean">
+    <MSBuild Projects="$(ProjectFile)"
+             Properties="Configuration=$(Configuration)"
+             Targets="Clean" />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+</Project>

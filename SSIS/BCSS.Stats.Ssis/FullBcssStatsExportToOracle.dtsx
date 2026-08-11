@@ -1,0 +1,442 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="8/10/2026"
+  DTS:CreatorComputerName="BCSS-ETL"
+  DTS:CreatorName="BCSS"
+  DTS:DTSID="{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="16.0.5467.0"
+  DTS:LocaleID="1033"
+  DTS:ObjectName="FullBcssStatsExportToOracle"
+  DTS:PackageType="5"
+  DTS:ProtectionLevel="1"
+  DTS:VersionBuild="1"
+  DTS:VersionGUID="{22903847-BCSS-STAT-93EA-7FCD54C22753}">
+
+  <DTS:Property DTS:Name="PackageFormatVersion">8</DTS:Property>
+
+  <!-- ================================================================== -->
+  <!-- Connection Managers                                                 -->
+  <!-- Source: PostgreSQL via ODBC                                        -->
+  <!-- Destination: Oracle via OLE DB                                     -->
+  <!-- Configuration: SQL Server ETLs_Configuration database              -->
+  <!-- ================================================================== -->
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[Source]"
+      DTS:CreationName="ODBC"
+      DTS:DTSID="{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
+      DTS:ObjectName="Source">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Driver={PostgreSQL Unicode};Server=&lt;OPENSHIFT_ROUTE&gt;;Port=5432;Database=unified_scheduling;Uid=&lt;USERNAME&gt;;Pwd=;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[Destination]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{D4E5F6A7-B8C9-0123-DEF1-234567890123}"
+      DTS:ObjectName="Destination">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=bidevv.bcgov)(PORT=1521)))(CONNECT_DATA=(SID=devv)(SERVER=DEDICATED)));User ID=BCSS;Password=;Provider=OraOLEDB.Oracle.1;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[Configuration]"
+      DTS:CreationName="OLEDB"
+      DTS:DTSID="{E5F6A7B8-C901-2345-EF12-345678901234}"
+      DTS:ObjectName="Configuration">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=beach.idir.bcgov;Initial Catalog=ETLs_Configuration;Provider=SQLNCLI11;Integrated Security=SSPI;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+
+  <!-- ================================================================== -->
+  <!-- Package Configurations (read from ETLs_Configuration DB)           -->
+  <!-- ================================================================== -->
+  <DTS:Configurations>
+    <DTS:Configuration
+      DTS:ConfigurationString="&quot;ETLs_Configuration&quot;.&quot;dbo&quot;.&quot;SSIS Configurations&quot;"
+      DTS:ConfigurationVariable="\Package.Connections[Source].Properties[ConnectionString]"
+      DTS:ConfigurationType="3"
+      DTS:ObjectName="Source Connection String" />
+    <DTS:Configuration
+      DTS:ConfigurationString="&quot;ETLs_Configuration&quot;.&quot;dbo&quot;.&quot;SSIS Configurations&quot;"
+      DTS:ConfigurationVariable="\Package.Connections[Source].Properties[Description]"
+      DTS:ConfigurationType="3"
+      DTS:ObjectName="Source Description" />
+    <DTS:Configuration
+      DTS:ConfigurationString="&quot;ETLs_Configuration&quot;.&quot;dbo&quot;.&quot;SSIS Configurations&quot;"
+      DTS:ConfigurationVariable="\Package.Connections[Destination].Properties[ConnectionString]"
+      DTS:ConfigurationType="3"
+      DTS:ObjectName="Destination Connection String" />
+    <DTS:Configuration
+      DTS:ConfigurationString="&quot;ETLs_Configuration&quot;.&quot;dbo&quot;.&quot;SSIS Configurations&quot;"
+      DTS:ConfigurationVariable="\Package.Connections[Destination].Properties[Description]"
+      DTS:ConfigurationType="3"
+      DTS:ObjectName="Destination Description" />
+  </DTS:Configurations>
+
+  <!-- ================================================================== -->
+  <!-- Control Flow                                                        -->
+  <!-- Step 1: Disable FK constraints on Oracle                           -->
+  <!-- Step 2: Truncate all Oracle tables                                 -->
+  <!-- Step 3: Data Flow - Copy all 7 tables (parallel where possible)    -->
+  <!-- Step 4: Re-enable FK constraints on Oracle                         -->
+  <!-- ================================================================== -->
+  <DTS:Executables>
+
+    <!-- ============================================================== -->
+    <!-- STEP 1: Disable Foreign Keys                                   -->
+    <!-- ============================================================== -->
+    <DTS:Executable
+      DTS:refId="Package\Disable Foreign Keys"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:DTSID="{10000001-0001-0001-0001-000000000001}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:ObjectName="Disable Foreign Keys">
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask"
+          SQLTask:Connection="Destination"
+          SQLTask:SqlStatementSource="
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE STAT_CATEGORIES DISABLE CONSTRAINT FK_STAT_CAT_GROUP';
+  EXECUTE IMMEDIATE 'ALTER TABLE SUB_CATEGORIES DISABLE CONSTRAINT FK_SUB_CAT_CATEGORY';
+  EXECUTE IMMEDIATE 'ALTER TABLE SUB_CATEGORY_METRICS DISABLE CONSTRAINT FK_SCM_SUB_CATEGORY';
+  EXECUTE IMMEDIATE 'ALTER TABLE SUB_CATEGORY_METRICS DISABLE CONSTRAINT FK_SCM_METRIC';
+  EXECUTE IMMEDIATE 'ALTER TABLE STAT_RECORDS DISABLE CONSTRAINT FK_STAT_REC_SCM';
+END;" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+
+    <!-- ============================================================== -->
+    <!-- STEP 2: Truncate All Tables                                    -->
+    <!-- ============================================================== -->
+    <DTS:Executable
+      DTS:refId="Package\Truncate Tables"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:DTSID="{10000002-0002-0002-0002-000000000002}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:ObjectName="Truncate Tables">
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask"
+          SQLTask:Connection="Destination"
+          SQLTask:SqlStatementSource="
+BEGIN
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE STAT_RECORDS';
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE STAT_SIGNOFFS';
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE SUB_CATEGORY_METRICS';
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE SUB_CATEGORIES';
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE STAT_CATEGORIES';
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE STAT_METRICS';
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE STAT_GROUPS';
+END;" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+
+    <!-- ============================================================== -->
+    <!-- STEP 3: Data Flow Task - Copy All Tables                       -->
+    <!-- Contains 7 data flow components, one per table.                -->
+    <!-- Reference tables load first, then dependent tables.            -->
+    <!-- ============================================================== -->
+    <DTS:Executable
+      DTS:refId="Package\Data Flow Task"
+      DTS:CreationName="Microsoft.Pipeline"
+      DTS:DTSID="{10000003-0003-0003-0003-000000000003}"
+      DTS:ExecutableType="Microsoft.Pipeline"
+      DTS:ObjectName="Data Flow Task">
+      <DTS:ObjectData>
+        <pipeline version="1">
+          <components>
+
+            <!-- ====== STAT_GROUPS (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - STAT_GROUPS"
+              name="Source - STAT_GROUPS"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="OpenRowset"></property>
+                <property name="SqlCommand">SELECT "Id" AS ID, "Name" AS NAME, "DisplayOrder" AS DISPLAY_ORDER, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "StatGroups"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - STAT_GROUPS.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_GROUPS (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - STAT_GROUPS"
+              name="Destination - STAT_GROUPS"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">STAT_GROUPS</property>
+                <property name="AccessMode">3</property>
+                <property name="FastLoadOptions">ROWS_PER_BATCH = 1000</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - STAT_GROUPS.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_METRICS (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - STAT_METRICS"
+              name="Source - STAT_METRICS"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="SqlCommand">SELECT "Id" AS ID, "Name" AS NAME, "UnitOfMeasure" AS UNIT_OF_MEASURE, CASE WHEN "IsOvertime" THEN 1 ELSE 0 END AS IS_OVERTIME, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "StatMetrics"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - STAT_METRICS.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_METRICS (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - STAT_METRICS"
+              name="Destination - STAT_METRICS"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">STAT_METRICS</property>
+                <property name="AccessMode">3</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - STAT_METRICS.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_CATEGORIES (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - STAT_CATEGORIES"
+              name="Source - STAT_CATEGORIES"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="SqlCommand">SELECT "Id" AS ID, "GroupId" AS GROUP_ID, "Name" AS NAME, CASE WHEN "IsArchived" THEN 1 ELSE 0 END AS IS_ARCHIVED, CASE WHEN "IsHighSecurity" THEN 1 ELSE 0 END AS IS_HIGH_SECURITY, "DisplayOrder" AS DISPLAY_ORDER, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "StatCategories"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - STAT_CATEGORIES.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_CATEGORIES (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - STAT_CATEGORIES"
+              name="Destination - STAT_CATEGORIES"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">STAT_CATEGORIES</property>
+                <property name="AccessMode">3</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - STAT_CATEGORIES.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+            <!-- ====== SUB_CATEGORIES (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - SUB_CATEGORIES"
+              name="Source - SUB_CATEGORIES"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="SqlCommand">SELECT "Id" AS ID, "CategoryId" AS CATEGORY_ID, "Name" AS NAME, "DisplayOrder" AS DISPLAY_ORDER, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "SubCategories"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - SUB_CATEGORIES.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== SUB_CATEGORIES (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - SUB_CATEGORIES"
+              name="Destination - SUB_CATEGORIES"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">SUB_CATEGORIES</property>
+                <property name="AccessMode">3</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - SUB_CATEGORIES.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+            <!-- ====== SUB_CATEGORY_METRICS (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - SUB_CATEGORY_METRICS"
+              name="Source - SUB_CATEGORY_METRICS"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="SqlCommand">SELECT "Id" AS ID, "SubCategoryId" AS SUB_CATEGORY_ID, "MetricId" AS METRIC_ID, "DisplayOrder" AS DISPLAY_ORDER, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "SubCategoryMetrics"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - SUB_CATEGORY_METRICS.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== SUB_CATEGORY_METRICS (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - SUB_CATEGORY_METRICS"
+              name="Destination - SUB_CATEGORY_METRICS"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">SUB_CATEGORY_METRICS</property>
+                <property name="AccessMode">3</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - SUB_CATEGORY_METRICS.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_RECORDS (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - STAT_RECORDS"
+              name="Source - STAT_RECORDS"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="SqlCommand">SELECT "Id" AS ID, "DateFrom" AS DATE_FROM, "DateTo" AS DATE_TO, "PeriodType" AS PERIOD_TYPE, "LocationId" AS LOCATION_ID, "SubCategoryMetricId" AS SUB_CATEGORY_METRIC_ID, "Value" AS VALUE, "Status" AS STATUS, "Comment" AS COMMENT_TEXT, CAST("UserId" AS VARCHAR(36)) AS USER_ID, CAST("SignedOffByUserId" AS VARCHAR(36)) AS SIGNED_OFF_BY_USER_ID, "SignedOffAt" AS SIGNED_OFF_AT, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "StatRecords"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - STAT_RECORDS.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_RECORDS (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - STAT_RECORDS"
+              name="Destination - STAT_RECORDS"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">STAT_RECORDS</property>
+                <property name="AccessMode">3</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - STAT_RECORDS.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_SIGNOFFS (Source) ====== -->
+            <component refId="Package\Data Flow Task\Source - STAT_SIGNOFFS"
+              name="Source - STAT_SIGNOFFS"
+              componentClassID="Microsoft.ODBCSource">
+              <properties>
+                <property name="SqlCommand">SELECT "Id" AS ID, CAST("UserId" AS VARCHAR(36)) AS USER_ID, "LocationId" AS LOCATION_ID, "Month" AS MONTH, "Year" AS YEAR, "SignoffDate" AS SIGNOFF_DATE, CAST("CreatedById" AS VARCHAR(36)) AS CREATED_BY_ID, "CreatedOn" AS CREATED_ON, CAST("UpdatedById" AS VARCHAR(36)) AS UPDATED_BY_ID, "UpdatedOn" AS UPDATED_ON FROM "StatSignoffs"</property>
+                <property name="AccessMode">2</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Source - STAT_SIGNOFFS.Connections[ODBCConnectionManager]"
+                  connectionManagerRefId="Package.ConnectionManagers[Source]"
+                  name="ODBCConnectionManager" />
+              </connections>
+            </component>
+
+            <!-- ====== STAT_SIGNOFFS (Destination) ====== -->
+            <component refId="Package\Data Flow Task\Destination - STAT_SIGNOFFS"
+              name="Destination - STAT_SIGNOFFS"
+              componentClassID="Microsoft.OLEDBDestination">
+              <properties>
+                <property name="OpenRowset">STAT_SIGNOFFS</property>
+                <property name="AccessMode">3</property>
+              </properties>
+              <connections>
+                <connection refId="Package\Data Flow Task\Destination - STAT_SIGNOFFS.Connections[OleDbConnection]"
+                  connectionManagerRefId="Package.ConnectionManagers[Destination]"
+                  name="OleDbConnection" />
+              </connections>
+            </component>
+
+          </components>
+
+          <!-- Data flow paths: Source -> Destination for each table -->
+          <paths>
+            <path refId="Package\Data Flow Task.Paths[STAT_GROUPS]" name="STAT_GROUPS" startId="Package\Data Flow Task\Source - STAT_GROUPS.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - STAT_GROUPS.Inputs[OLE DB Destination Input]" />
+            <path refId="Package\Data Flow Task.Paths[STAT_METRICS]" name="STAT_METRICS" startId="Package\Data Flow Task\Source - STAT_METRICS.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - STAT_METRICS.Inputs[OLE DB Destination Input]" />
+            <path refId="Package\Data Flow Task.Paths[STAT_CATEGORIES]" name="STAT_CATEGORIES" startId="Package\Data Flow Task\Source - STAT_CATEGORIES.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - STAT_CATEGORIES.Inputs[OLE DB Destination Input]" />
+            <path refId="Package\Data Flow Task.Paths[SUB_CATEGORIES]" name="SUB_CATEGORIES" startId="Package\Data Flow Task\Source - SUB_CATEGORIES.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - SUB_CATEGORIES.Inputs[OLE DB Destination Input]" />
+            <path refId="Package\Data Flow Task.Paths[SUB_CATEGORY_METRICS]" name="SUB_CATEGORY_METRICS" startId="Package\Data Flow Task\Source - SUB_CATEGORY_METRICS.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - SUB_CATEGORY_METRICS.Inputs[OLE DB Destination Input]" />
+            <path refId="Package\Data Flow Task.Paths[STAT_RECORDS]" name="STAT_RECORDS" startId="Package\Data Flow Task\Source - STAT_RECORDS.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - STAT_RECORDS.Inputs[OLE DB Destination Input]" />
+            <path refId="Package\Data Flow Task.Paths[STAT_SIGNOFFS]" name="STAT_SIGNOFFS" startId="Package\Data Flow Task\Source - STAT_SIGNOFFS.Outputs[ODBC Source Output]" endId="Package\Data Flow Task\Destination - STAT_SIGNOFFS.Inputs[OLE DB Destination Input]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+
+    <!-- ============================================================== -->
+    <!-- STEP 4: Re-enable Foreign Keys                                 -->
+    <!-- ============================================================== -->
+    <DTS:Executable
+      DTS:refId="Package\Enable Foreign Keys"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:DTSID="{10000004-0004-0004-0004-000000000004}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:ObjectName="Enable Foreign Keys">
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask"
+          SQLTask:Connection="Destination"
+          SQLTask:SqlStatementSource="
+BEGIN
+  EXECUTE IMMEDIATE 'ALTER TABLE STAT_CATEGORIES ENABLE CONSTRAINT FK_STAT_CAT_GROUP';
+  EXECUTE IMMEDIATE 'ALTER TABLE SUB_CATEGORIES ENABLE CONSTRAINT FK_SUB_CAT_CATEGORY';
+  EXECUTE IMMEDIATE 'ALTER TABLE SUB_CATEGORY_METRICS ENABLE CONSTRAINT FK_SCM_SUB_CATEGORY';
+  EXECUTE IMMEDIATE 'ALTER TABLE SUB_CATEGORY_METRICS ENABLE CONSTRAINT FK_SCM_METRIC';
+  EXECUTE IMMEDIATE 'ALTER TABLE STAT_RECORDS ENABLE CONSTRAINT FK_STAT_REC_SCM';
+END;" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+
+  </DTS:Executables>
+
+  <!-- ================================================================== -->
+  <!-- Precedence Constraints (execution order)                           -->
+  <!-- Disable FKs -> Truncate -> Data Flow -> Enable FKs                 -->
+  <!-- ================================================================== -->
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Disable FK to Truncate]"
+      DTS:CreationName=""
+      DTS:DTSID="{20000001-0001-0001-0001-000000000001}"
+      DTS:From="Package\Disable Foreign Keys"
+      DTS:To="Package\Truncate Tables"
+      DTS:ObjectName="Disable FK to Truncate" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Truncate to Data Flow]"
+      DTS:CreationName=""
+      DTS:DTSID="{20000002-0002-0002-0002-000000000002}"
+      DTS:From="Package\Truncate Tables"
+      DTS:To="Package\Data Flow Task"
+      DTS:ObjectName="Truncate to Data Flow" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Data Flow to Enable FK]"
+      DTS:CreationName=""
+      DTS:DTSID="{20000003-0003-0003-0003-000000000003}"
+      DTS:From="Package\Data Flow Task"
+      DTS:To="Package\Enable Foreign Keys"
+      DTS:ObjectName="Data Flow to Enable FK" />
+  </DTS:PrecedenceConstraints>
+
+</DTS:Executable>
