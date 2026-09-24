@@ -4,27 +4,31 @@
 -- No FKs to Users/Locations since those are not replicated.
 -- ============================================================================
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+alter session set container = freepdb1;
+alter session set current_schema = etl_target;
+
 -- StatCategories -> StatGroups
-ALTER TABLE STAT_CATEGORIES
-    ADD CONSTRAINT FK_STAT_CAT_GROUP
-    FOREIGN KEY (GROUP_ID) REFERENCES STAT_GROUPS (ID);
+alter table stat_categories
+   add constraint fk_stat_cat_group foreign key ( group_id )
+      references stat_groups ( id );
 
 -- SubCategories -> StatCategories
-ALTER TABLE SUB_CATEGORIES
-    ADD CONSTRAINT FK_SUB_CAT_CATEGORY
-    FOREIGN KEY (CATEGORY_ID) REFERENCES STAT_CATEGORIES (ID);
+alter table sub_categories
+   add constraint fk_sub_cat_category foreign key ( category_id )
+      references stat_categories ( id );
 
 -- SubCategoryMetrics -> SubCategories
-ALTER TABLE SUB_CATEGORY_METRICS
-    ADD CONSTRAINT FK_SCM_SUB_CATEGORY
-    FOREIGN KEY (SUB_CATEGORY_ID) REFERENCES SUB_CATEGORIES (ID);
+alter table sub_category_metrics
+   add constraint fk_scm_sub_category foreign key ( sub_category_id )
+      references sub_categories ( id );
 
 -- SubCategoryMetrics -> StatMetrics
-ALTER TABLE SUB_CATEGORY_METRICS
-    ADD CONSTRAINT FK_SCM_METRIC
-    FOREIGN KEY (METRIC_ID) REFERENCES STAT_METRICS (ID);
+alter table sub_category_metrics
+   add constraint fk_scm_metric foreign key ( metric_id )
+      references stat_metrics ( id );
 
 -- StatRecords -> SubCategoryMetrics
-ALTER TABLE STAT_RECORDS
-    ADD CONSTRAINT FK_STAT_REC_SCM
-    FOREIGN KEY (SUB_CATEGORY_METRIC_ID) REFERENCES SUB_CATEGORY_METRICS (ID);
+alter table stat_records
+   add constraint fk_stat_rec_scm foreign key ( sub_category_metric_id )
+      references sub_category_metrics ( id );

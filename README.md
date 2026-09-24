@@ -51,9 +51,12 @@ This repository follows [BC Gov's Work in the Open](https://digital.gov.bc.ca/po
 ```
 unified-stats-etl/
 ├── DDL/Oracle/                     # Oracle target database scripts
-│   ├── bcss-create-tables.sql      # CREATE TABLE for all 7 stats tables
-│   ├── bcss-create-fk.sql          # Foreign key constraints
-│   └── bcss-create-indexes.sql     # Indexes
+│   ├── 001-bcss-create-tables.sql  # CREATE TABLE for all 7 stats tables
+│   ├── 002-bcss-create-fk.sql      # Foreign key constraints
+│   ├── 003-bcss-create-indexes.sql # Indexes
+│   ├── 005-bcss-create-biprdz-schema.sql
+│   ├── 006-bcss-create-biprdz-tables.sql
+│   └── 007-bcss-grant-biprdz-access.sql
 ├── SQL/                            # SQL Server scripts
 │   ├── ETL_Configuration_Table.sql # SSIS config entries (Dev/Test/Prod)
 │   └── SsisSqlAgentJob.sql         # SQL Agent jobs (Dev/Test/Prod)
@@ -84,11 +87,13 @@ unified-stats-etl/
 For full targets and network information see the following protected wiki: https://wiki.justice.gov.bc.ca/wiki/spaces/CSA/pages/538705956/Stats+ETL+project
 
 ### Network & Firewall
+
 - PostgreSQL exposed via Load Balancer in OpenShift Emerald
 - Firewall rule: SSIS server to PostgreSQL Load Balancer (port 5432)
 - Firewall rule: SSIS server to Oracle servers (port 1521) — likely already open from existing BI patterns
 
 ### SSIS Server
+
 Following the PCSS pattern (see PCBI Infrastructure documentation):
 
 1. **Oracle Client Tools** (x86 and x64) installed on the SSIS server
@@ -99,8 +104,9 @@ Following the PCSS pattern (see PCBI Infrastructure documentation):
 6. **File share** `\\<SHARE_HOST>\<PATH>\{Dev,Test,Prod}` for deployed packages
 
 ### Oracle
+
 - BCSS user/schema created on target Oracle hosts
-- Tables created via `DDL/Oracle/bcss-create-tables.sql`
+- Tables created via `DDL/Oracle/001-bcss-create-tables.sql`
 
 ## License
 
