@@ -1,7 +1,6 @@
 # SSIS / Visual Studio
 *.dtproj.user
 *.dtsx.user
-*.database
 *.suo
 *.user
 *.userosscache
