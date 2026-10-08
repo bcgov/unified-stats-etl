@@ -12,8 +12,8 @@
   DTS:ObjectName="BCSS Stats Replicate"
   DTS:PackageType="5"
   DTS:ProtectionLevel="0"
-  DTS:VersionBuild="42"
-  DTS:VersionGUID="{793C9E59-E5FD-4DC9-BEDC-71F0A9A60BFC}">
+  DTS:VersionBuild="46"
+  DTS:VersionGUID="{36FAEDC8-CB77-4982-B260-A31AAE2E9805}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -93,6 +93,17 @@
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
+      DTS:DTSID="{FEFB4EA9-1B8E-4CE8-8FD4-2B9CC358E84D}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="@[$Project::pOracleTargetSchema]"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="TargetSchema">
+      <DTS:VariableValue
+        DTS:DataType="8">COURTS</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
       DTS:DTSID="{C70F1F9A-CAF8-49B9-A890-96264A923B80}"
       DTS:EvaluateAsExpression="True"
       DTS:Expression="&quot;TRUNCATE TABLE &quot; + @[User::TableName]"
@@ -117,7 +128,14 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-          SQLTask:SqlStatementSource="BEGIN&#xA;    FOR c IN (&#xA;        SELECT table_name, constraint_name&#xA;        FROM user_constraints&#xA;        WHERE constraint_type = 'R'&#xA;          AND status = 'ENABLED'&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.table_name ||&#xA;            '&quot; DISABLE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := UPPER(?);&#xA;BEGIN&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'ENABLED'&#xA;AND table_name IN (&#xA;              'STATGROUPS',&#xA;              'STATMETRICS',&#xA;              'STATCATEGORIES',&#xA;              'SUBCATEGORIES',&#xA;              'SUBCATEGORYMETRICS',&#xA;              'STATRECORDS',&#xA;              'STATSIGNOFFS'&#xA;          )&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner ||&#xA;            '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; DISABLE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ParameterBinding
+            SQLTask:ParameterName="TargetSchema"
+            SQLTask:DtsVariableName="User::TargetSchema"
+            SQLTask:ParameterDirection="Input"
+            SQLTask:DataType="129"
+            SQLTask:ParameterSize="0" />
+        </SQLTask:SqlTaskData>
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -133,7 +151,14 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-          SQLTask:SqlStatementSource="BEGIN&#xA;    FOR c IN (&#xA;        SELECT table_name, constraint_name&#xA;        FROM user_constraints&#xA;        WHERE constraint_type = 'R'&#xA;          AND status = 'DISABLED'&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.table_name ||&#xA;            '&quot; ENABLE VALIDATE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := UPPER(?);&#xA;BEGIN&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'DISABLED'&#xA;AND table_name IN (&#xA;              'STATGROUPS',&#xA;              'STATMETRICS',&#xA;              'STATCATEGORIES',&#xA;              'SUBCATEGORIES',&#xA;              'SUBCATEGORYMETRICS',&#xA;              'STATRECORDS',&#xA;              'STATSIGNOFFS'&#xA;          )&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner ||&#xA;            '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; ENABLE VALIDATE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ParameterBinding
+            SQLTask:ParameterName="TargetSchema"
+            SQLTask:DtsVariableName="User::TargetSchema"
+            SQLTask:ParameterDirection="Input"
+            SQLTask:DataType="129"
+            SQLTask:ParameterSize="0" />
+        </SQLTask:SqlTaskData>
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -4563,7 +4588,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Retrieve Tables">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="132,42"
           Id="Package\Retrieve Tables\Unified DB"
@@ -4591,9 +4616,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>

@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.33027.164
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{C9674DCB-5085-4A16-B785-4C70DD1589BD}") = "BCSS.Stats.Replicate", "BCSS.Stats.Replicate\BCSS.Stats.Replicate.dtproj", "{45BA6433-4460-4166-9205-97D362BA40F9}"
 EndProject
+Project("{C9674DCB-5085-4A16-B785-4C70DD1589BD}") = "BCSS.Stats.Legacy", "BCSS.Stats.Legacy\BCSS.Stats.Legacy\BCSS.Stats.Legacy.dtproj", "{C9AAB36E-7B7A-4C73-8E4A-034C0434BA14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Development|Default = Development|Default
@@ -12,6 +14,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{45BA6433-4460-4166-9205-97D362BA40F9}.Development|Default.ActiveCfg = Development
 		{45BA6433-4460-4166-9205-97D362BA40F9}.Development|Default.Build.0 = Development
+		{C9AAB36E-7B7A-4C73-8E4A-034C0434BA14}.Development|Default.ActiveCfg = Development
+		{C9AAB36E-7B7A-4C73-8E4A-034C0434BA14}.Development|Default.Build.0 = Development
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
