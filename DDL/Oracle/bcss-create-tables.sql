@@ -9,150 +9,135 @@
 -- is not replicated. The FK relationships are enforced at the source (PostgreSQL).
 -- xmin (PostgreSQL row version) is excluded as it has no Oracle equivalent.
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+alter session set container = freepdb1;
+alter session set current_schema = etl_target;
+
 -- ============================================================================
 -- 1. STAT_GROUPS
 -- ============================================================================
-CREATE TABLE STAT_GROUPS
-    (
-     ID                  NUMBER(10)      NOT NULL,
-     NAME                VARCHAR2(500 BYTE) NOT NULL,
-     DISPLAY_ORDER       NUMBER(10)      NOT NULL,
-     CREATED_BY_ID       VARCHAR2(36 BYTE),
-     CREATED_ON          TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
-    )
-;
+create table stat_groups (
+   id            number(10) not null,
+   name          varchar2(500 byte) not null,
+   display_order number(10) not null,
+   created_by_id varchar2(36 byte),
+   created_on    timestamp(3) not null,
+   updated_by_id varchar2(36 byte),
+   updated_on    timestamp(3)
+);
 
-ALTER TABLE STAT_GROUPS
-    ADD CONSTRAINT STAT_GROUPS_PK PRIMARY KEY (ID);
+alter table stat_groups add constraint stat_groups_pk primary key ( id );
 
 -- ============================================================================
 -- 2. STAT_CATEGORIES
 -- ============================================================================
-CREATE TABLE STAT_CATEGORIES
-    (
-     ID                  NUMBER(10)      NOT NULL,
-     GROUP_ID            NUMBER(10)      NOT NULL,
-     NAME                VARCHAR2(500 BYTE) NOT NULL,
-     IS_ARCHIVED         NUMBER(1)       NOT NULL,
-     IS_HIGH_SECURITY    NUMBER(1)       NOT NULL,
-     DISPLAY_ORDER       NUMBER(10)      NOT NULL,
-     CREATED_BY_ID       VARCHAR2(36 BYTE),
-     CREATED_ON          TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
-    )
-;
+create table stat_categories (
+   id               number(10) not null,
+   group_id         number(10) not null,
+   name             varchar2(500 byte) not null,
+   is_archived      number(1) not null,
+   is_high_security number(1) not null,
+   display_order    number(10) not null,
+   created_by_id    varchar2(36 byte),
+   created_on       timestamp(3) not null,
+   updated_by_id    varchar2(36 byte),
+   updated_on       timestamp(3)
+);
 
-ALTER TABLE STAT_CATEGORIES
-    ADD CONSTRAINT STAT_CATEGORIES_PK PRIMARY KEY (ID);
+alter table stat_categories add constraint stat_categories_pk primary key ( id );
 
 -- ============================================================================
 -- 3. SUB_CATEGORIES
 -- ============================================================================
-CREATE TABLE SUB_CATEGORIES
-    (
-     ID                  NUMBER(10)      NOT NULL,
-     CATEGORY_ID         NUMBER(10)      NOT NULL,
-     NAME                VARCHAR2(500 BYTE) NOT NULL,
-     DISPLAY_ORDER       NUMBER(10)      NOT NULL,
-     CREATED_BY_ID       VARCHAR2(36 BYTE),
-     CREATED_ON          TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
-    )
-;
+create table sub_categories (
+   id            number(10) not null,
+   category_id   number(10) not null,
+   name          varchar2(500 byte) not null,
+   display_order number(10) not null,
+   created_by_id varchar2(36 byte),
+   created_on    timestamp(3) not null,
+   updated_by_id varchar2(36 byte),
+   updated_on    timestamp(3)
+);
 
-ALTER TABLE SUB_CATEGORIES
-    ADD CONSTRAINT SUB_CATEGORIES_PK PRIMARY KEY (ID);
+alter table sub_categories add constraint sub_categories_pk primary key ( id );
 
 -- ============================================================================
 -- 4. STAT_METRICS
 -- ============================================================================
-CREATE TABLE STAT_METRICS
-    (
-     ID                  NUMBER(10)      NOT NULL,
-     NAME                VARCHAR2(500 BYTE) NOT NULL,
-     UNIT_OF_MEASURE     VARCHAR2(100 BYTE) NOT NULL,
-     IS_OVERTIME         NUMBER(1)       NOT NULL,
-     CREATED_BY_ID       VARCHAR2(36 BYTE),
-     CREATED_ON          TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
-    )
-;
+create table stat_metrics (
+   id              number(10) not null,
+   name            varchar2(500 byte) not null,
+   unit_of_measure varchar2(100 byte) not null,
+   is_overtime     number(1) not null,
+   created_by_id   varchar2(36 byte),
+   created_on      timestamp(3) not null,
+   updated_by_id   varchar2(36 byte),
+   updated_on      timestamp(3)
+);
 
-ALTER TABLE STAT_METRICS
-    ADD CONSTRAINT STAT_METRICS_PK PRIMARY KEY (ID);
+alter table stat_metrics add constraint stat_metrics_pk primary key ( id );
 
 -- ============================================================================
 -- 5. SUB_CATEGORY_METRICS
 -- ============================================================================
-CREATE TABLE SUB_CATEGORY_METRICS
-    (
-     ID                  NUMBER(10)      NOT NULL,
-     SUB_CATEGORY_ID     NUMBER(10)      NOT NULL,
-     METRIC_ID           NUMBER(10)      NOT NULL,
-     DISPLAY_ORDER       NUMBER(10)      NOT NULL,
-     CREATED_BY_ID       VARCHAR2(36 BYTE),
-     CREATED_ON          TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
-    )
-;
+create table sub_category_metrics (
+   id              number(10) not null,
+   sub_category_id number(10) not null,
+   metric_id       number(10) not null,
+   display_order   number(10) not null,
+   created_by_id   varchar2(36 byte),
+   created_on      timestamp(3) not null,
+   updated_by_id   varchar2(36 byte),
+   updated_on      timestamp(3)
+);
 
-ALTER TABLE SUB_CATEGORY_METRICS
-    ADD CONSTRAINT SUB_CATEGORY_METRICS_PK PRIMARY KEY (ID);
+alter table sub_category_metrics add constraint sub_category_metrics_pk primary key ( id );
 
 -- ============================================================================
 -- 6. STAT_RECORDS
 -- ============================================================================
-CREATE TABLE STAT_RECORDS
-    (
-     ID                      NUMBER(10)      NOT NULL,
-     DATE_FROM               DATE            NOT NULL,
-     DATE_TO                 DATE            NOT NULL,
-     PERIOD_TYPE             VARCHAR2(50 BYTE) NOT NULL,
-     LOCATION_ID             NUMBER(10)      NOT NULL,
-     SUB_CATEGORY_METRIC_ID  NUMBER(10)      NOT NULL,
-     VALUE                   NUMBER(18,4)    NOT NULL,
-     STATUS                  VARCHAR2(50 BYTE) NOT NULL,
-     COMMENT_TEXT            VARCHAR2(1000 BYTE),
-     USER_ID                 VARCHAR2(36 BYTE),
-     SIGNED_OFF_BY_USER_ID   VARCHAR2(36 BYTE),
-     SIGNED_OFF_AT           TIMESTAMP(3),
-     CREATED_BY_ID           VARCHAR2(36 BYTE),
-     CREATED_ON              TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID           VARCHAR2(36 BYTE),
-     UPDATED_ON              TIMESTAMP(3)
-    )
-;
+create table stat_records (
+   id                     number(10) not null,
+   date_from              date not null,
+   date_to                date not null,
+   period_type            varchar2(50 byte) not null,
+   location_id            number(10) not null,
+   sub_category_metric_id number(10) not null,
+   value                  number(18,4) not null,
+   status                 varchar2(50 byte) not null,
+   comment_text           varchar2(1000 byte),
+   user_id                varchar2(36 byte),
+   signed_off_by_user_id  varchar2(36 byte),
+   signed_off_at          timestamp(3),
+   created_by_id          varchar2(36 byte),
+   created_on             timestamp(3) not null,
+   updated_by_id          varchar2(36 byte),
+   updated_on             timestamp(3)
+);
 
-ALTER TABLE STAT_RECORDS
-    ADD CONSTRAINT STAT_RECORDS_PK PRIMARY KEY (ID);
+alter table stat_records add constraint stat_records_pk primary key ( id );
 
 -- ============================================================================
 -- 7. STAT_SIGNOFFS
 -- ============================================================================
-CREATE TABLE STAT_SIGNOFFS
-    (
-     ID                  NUMBER(10)      NOT NULL,
-     USER_ID             VARCHAR2(36 BYTE) NOT NULL,
-     LOCATION_ID         NUMBER(10)      NOT NULL,
-     MONTH               NUMBER(2)       NOT NULL,
-     YEAR                NUMBER(4)       NOT NULL,
-     SIGNOFF_DATE        TIMESTAMP(3)    NOT NULL,
-     CREATED_BY_ID       VARCHAR2(36 BYTE),
-     CREATED_ON          TIMESTAMP(3)    NOT NULL,
-     UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
-    )
-;
+create table stat_signoffs (
+   id            number(10) not null,
+   user_id       varchar2(36 byte) not null,
+   location_id   number(10) not null,
+   month         number(2) not null,
+   year          number(4) not null,
+   signoff_date  timestamp(3) not null,
+   created_by_id varchar2(36 byte),
+   created_on    timestamp(3) not null,
+   updated_by_id varchar2(36 byte),
+   updated_on    timestamp(3)
+);
 
-ALTER TABLE STAT_SIGNOFFS
-    ADD CONSTRAINT STAT_SIGNOFFS_PK PRIMARY KEY (ID);
+alter table stat_signoffs add constraint stat_signoffs_pk primary key ( id );
 
-ALTER TABLE STAT_SIGNOFFS
-    ADD CONSTRAINT STAT_SIGNOFFS_USER_LOC_MONTH_YEAR_UN
-    UNIQUE (USER_ID, LOCATION_ID, MONTH, YEAR);
+alter table stat_signoffs
+   add constraint stat_signoffs_user_loc_month_year_un unique ( user_id,
+                                                                location_id,
+                                                                month,
+                                                                year );

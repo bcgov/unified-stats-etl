@@ -2,23 +2,61 @@
 -- BCSS Stats - Oracle Indexes (Staging)
 -- ============================================================================
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+alter session set container = freepdb1;
+alter session set current_schema = etl_target;
+
 -- StatCategories
-CREATE INDEX IX_STAT_CAT_GROUP_ID ON STAT_CATEGORIES (GROUP_ID);
+create index ix_stat_cat_group_id on
+   stat_categories (
+      group_id
+   );
 
 -- SubCategories
-CREATE INDEX IX_SUB_CAT_CATEGORY_ID ON SUB_CATEGORIES (CATEGORY_ID);
+create index ix_sub_cat_category_id on
+   sub_categories (
+      category_id
+   );
 
 -- SubCategoryMetrics
-CREATE INDEX IX_SCM_SUB_CATEGORY_ID ON SUB_CATEGORY_METRICS (SUB_CATEGORY_ID);
-CREATE INDEX IX_SCM_METRIC_ID ON SUB_CATEGORY_METRICS (METRIC_ID);
+create index ix_scm_sub_category_id on
+   sub_category_metrics (
+      sub_category_id
+   );
+create index ix_scm_metric_id on
+   sub_category_metrics (
+      metric_id
+   );
 
 -- StatRecords
-CREATE INDEX IX_STAT_REC_LOCATION_ID ON STAT_RECORDS (LOCATION_ID);
-CREATE INDEX IX_STAT_REC_SCM_ID ON STAT_RECORDS (SUB_CATEGORY_METRIC_ID);
-CREATE INDEX IX_STAT_REC_DATE_RANGE ON STAT_RECORDS (DATE_FROM, DATE_TO);
-CREATE INDEX IX_STAT_REC_USER_ID ON STAT_RECORDS (USER_ID);
-CREATE INDEX IX_STAT_REC_STATUS ON STAT_RECORDS (STATUS);
+create index ix_stat_rec_location_id on
+   stat_records (
+      location_id
+   );
+create index ix_stat_rec_scm_id on
+   stat_records (
+      sub_category_metric_id
+   );
+create index ix_stat_rec_date_range on
+   stat_records (
+      date_from,
+      date_to
+   );
+create index ix_stat_rec_user_id on
+   stat_records (
+      user_id
+   );
+create index ix_stat_rec_status on
+   stat_records (
+      status
+   );
 
 -- StatSignoffs
-CREATE INDEX IX_STAT_SO_LOCATION_ID ON STAT_SIGNOFFS (LOCATION_ID);
-CREATE INDEX IX_STAT_SO_USER_ID ON STAT_SIGNOFFS (USER_ID);
+create index ix_stat_so_location_id on
+   stat_signoffs (
+      location_id
+   );
+create index ix_stat_so_user_id on
+   stat_signoffs (
+      user_id
+   );
