@@ -12,8 +12,8 @@
   DTS:ObjectName="BCSS Stats Replicate"
   DTS:PackageType="5"
   DTS:ProtectionLevel="0"
-  DTS:VersionBuild="42"
-  DTS:VersionGUID="{793C9E59-E5FD-4DC9-BEDC-71F0A9A60BFC}">
+  DTS:VersionBuild="80"
+  DTS:VersionGUID="{FB2EF914-D009-43F1-A835-B06669494267}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -93,6 +93,17 @@
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
+      DTS:DTSID="{FEFB4EA9-1B8E-4CE8-8FD4-2B9CC358E84D}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="@[$Project::pOracleTargetSchema]"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="TargetSchema">
+      <DTS:VariableValue
+        DTS:DataType="8">COURTS</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
       DTS:DTSID="{C70F1F9A-CAF8-49B9-A890-96264A923B80}"
       DTS:EvaluateAsExpression="True"
       DTS:Expression="&quot;TRUNCATE TABLE &quot; + @[User::TableName]"
@@ -117,7 +128,14 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-          SQLTask:SqlStatementSource="BEGIN&#xA;    FOR c IN (&#xA;        SELECT table_name, constraint_name&#xA;        FROM user_constraints&#xA;        WHERE constraint_type = 'R'&#xA;          AND status = 'ENABLED'&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.table_name ||&#xA;            '&quot; DISABLE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := UPPER(?);&#xA;BEGIN&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'ENABLED'&#xA;AND table_name IN (&#xA;              'STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS'&#xA;          )&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner ||&#xA;            '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; DISABLE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ParameterBinding
+            SQLTask:ParameterName="TargetSchema"
+            SQLTask:DtsVariableName="User::TargetSchema"
+            SQLTask:ParameterDirection="Input"
+            SQLTask:DataType="129"
+            SQLTask:ParameterSize="0" />
+        </SQLTask:SqlTaskData>
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -133,7 +151,14 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-          SQLTask:SqlStatementSource="BEGIN&#xA;    FOR c IN (&#xA;        SELECT table_name, constraint_name&#xA;        FROM user_constraints&#xA;        WHERE constraint_type = 'R'&#xA;          AND status = 'DISABLED'&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.table_name ||&#xA;            '&quot; ENABLE VALIDATE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := UPPER(?);&#xA;BEGIN&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'DISABLED'&#xA;AND table_name IN (&#xA;              'STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS'&#xA;          )&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner ||&#xA;            '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; ENABLE VALIDATE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          <SQLTask:ParameterBinding
+            SQLTask:ParameterName="TargetSchema"
+            SQLTask:DtsVariableName="User::TargetSchema"
+            SQLTask:ParameterDirection="Input"
+            SQLTask:DataType="129"
+            SQLTask:ParameterSize="0" />
+        </SQLTask:SqlTaskData>
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -198,6 +223,122 @@
           version="1">
           <components>
             <component
+              refId="Package\Retrieve Tables\OLE DB Source"
+              componentClassID="Microsoft.OLEDBSource"
+              contactInfo="OLE DB Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;7"
+              description="OLE DB Source"
+              name="OLE DB Source"
+              usesDispositions="true"
+              version="7">
+              <properties>
+                <property
+                  dataType="System.Int32"
+                  description="The number of seconds before a command times out.  A value of 0 indicates an infinite time-out."
+                  name="CommandTimeout">0</property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the name of the database object used to open a rowset."
+                  name="OpenRowset"></property>
+                <property
+                  dataType="System.String"
+                  description="Specifies the variable that contains the name of the database object used to open a rowset."
+                  name="OpenRowsetVariable"></property>
+                <property
+                  dataType="System.String"
+                  description="The SQL command to be executed."
+                  name="SqlCommand"
+                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">SELECT table_name
+FROM all_tables
+WHERE owner = 'ETL_TARGET'
+  AND (
+        UPPER(table_name) LIKE 'STAT%'
+        OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')
+      )
+ORDER BY table_name;</property>
+                <property
+                  dataType="System.String"
+                  description="The variable that contains the SQL command to be executed."
+                  name="SqlCommandVariable"></property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the column code page to use when code page information is unavailable from the data source."
+                  name="DefaultCodePage">1252</property>
+                <property
+                  dataType="System.Boolean"
+                  description="Forces the use of the DefaultCodePage property value when describing character data."
+                  name="AlwaysUseDefaultCodePage">false</property>
+                <property
+                  dataType="System.Int32"
+                  description="Specifies the mode used to access the database."
+                  name="AccessMode"
+                  typeConverter="AccessMode">2</property>
+                <property
+                  dataType="System.String"
+                  description="The mappings between the parameters in the SQL command and variables."
+                  name="ParameterMapping"></property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\Retrieve Tables\OLE DB Source.Connections[OleDbConnection]"
+                  connectionManagerID="Package.ConnectionManagers[Oracle Destination]"
+                  connectionManagerRefId="Package.ConnectionManagers[Oracle Destination]"
+                  description="The OLE DB runtime connection used to access the database."
+                  name="OleDbConnection" />
+              </connections>
+              <outputs>
+                <output
+                  refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output]"
+                  name="OLE DB Source Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output].Columns[TABLE_NAME]"
+                      dataType="wstr"
+                      errorOrTruncationOperation="Conversion"
+                      errorRowDisposition="FailComponent"
+                      externalMetadataColumnId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[TABLE_NAME]"
+                      length="128"
+                      lineageId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output].Columns[TABLE_NAME]"
+                      name="TABLE_NAME"
+                      truncationRowDisposition="FailComponent" />
+                  </outputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output].ExternalColumns[TABLE_NAME]"
+                      dataType="wstr"
+                      length="128"
+                      name="TABLE_NAME" />
+                  </externalMetadataColumns>
+                </output>
+                <output
+                  refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output]"
+                  isErrorOut="true"
+                  name="OLE DB Source Error Output">
+                  <outputColumns>
+                    <outputColumn
+                      refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[TABLE_NAME]"
+                      dataType="wstr"
+                      length="128"
+                      lineageId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[TABLE_NAME]"
+                      name="TABLE_NAME" />
+                    <outputColumn
+                      refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      dataType="i4"
+                      lineageId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorCode]"
+                      name="ErrorCode"
+                      specialFlags="1" />
+                    <outputColumn
+                      refId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      dataType="i4"
+                      lineageId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Error Output].Columns[ErrorColumn]"
+                      name="ErrorColumn"
+                      specialFlags="2" />
+                  </outputColumns>
+                  <externalMetadataColumns />
+                </output>
+              </outputs>
+            </component>
+            <component
               refId="Package\Retrieve Tables\Recordset Destination"
               componentClassID="Microsoft.RecordsetDestination"
               contactInfo="Recordset Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;0"
@@ -216,159 +357,23 @@
                   name="Recordset Destination Input">
                   <inputColumns>
                     <inputColumn
-                      refId="Package\Retrieve Tables\Recordset Destination.Inputs[Recordset Destination Input].Columns[table_name]"
+                      refId="Package\Retrieve Tables\Recordset Destination.Inputs[Recordset Destination Input].Columns[TABLE_NAME]"
                       cachedDataType="wstr"
-                      cachedLength="63"
-                      cachedName="table_name"
-                      lineageId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output].Columns[table_name]" />
+                      cachedLength="128"
+                      cachedName="TABLE_NAME"
+                      lineageId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output].Columns[TABLE_NAME]" />
                   </inputColumns>
                   <externalMetadataColumns />
                 </input>
               </inputs>
             </component>
-            <component
-              refId="Package\Retrieve Tables\Unified DB"
-              componentClassID="Microsoft.SSISODBCSrc"
-              contactInfo="ODBC Source;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
-              description="ODBC Source"
-              name="Unified DB"
-              usesDispositions="true"
-              version="1">
-              <properties>
-                <property
-                  dataType="System.String"
-                  description="The name of the table to be fetched."
-                  expressionType="Notify"
-                  name="TableName"></property>
-                <property
-                  dataType="System.String"
-                  description="The SQL command to be executed."
-                  expressionType="Notify"
-                  name="SqlCommand"
-                  UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-  AND table_type = 'BASE TABLE'
-  AND (
-        UPPER(table_name) LIKE 'STAT%'
-        OR UPPER(table_name) IN ('SUBCATEGORIES', 'SUBCATEGORYMETRICS')
-      )
-ORDER BY table_name;</property>
-                <property
-                  dataType="System.Int32"
-                  description="Specify the number of rows fetched per batch."
-                  expressionType="Notify"
-                  name="BatchSize">1000</property>
-                <property
-                  dataType="System.Int32"
-                  description="Determines the chunk size allocation for LOB columns"
-                  expressionType="Notify"
-                  name="LobChunkSize">32768</property>
-                <property
-                  dataType="System.Boolean"
-                  description="Determines how the component exposes CHAR columns. If False, CHAR columns are exposed as (multi-)byte strings (DT_STR), if True, CHAR columns are exposed as wide strings (DT_WSTR)"
-                  expressionType="Notify"
-                  name="ExposeCharColumnsAsUnicode">false</property>
-                <property
-                  dataType="System.Int32"
-                  description="The number of seconds to wait for an SQL statement to execute before returning to the application."
-                  expressionType="Notify"
-                  name="StatementTimeout">0</property>
-                <property
-                  dataType="System.Int32"
-                  description="The code page to use when code page information is unavailable from the data source."
-                  expressionType="Notify"
-                  name="DefaultCodePage">1252</property>
-                <property
-                  dataType="System.Int32"
-                  description="The method used for fetching data."
-                  expressionType="Notify"
-                  name="FetchMethod">1</property>
-                <property
-                  dataType="System.Int32"
-                  description="The ODBC C data type for binding numeric data."
-                  expressionType="Notify"
-                  name="BindNumericAs">0</property>
-                <property
-                  dataType="System.Int32"
-                  description="Determines how the component would bind columns of (multi)-byte string types (i.e., SQL_CHAR, SQL_VARCHAR, SQL_LONGVARCHAR). The options are: Unicode (SQL_C_WCHAR) and ANSI (SQL_C_CHAR)."
-                  expressionType="Notify"
-                  name="BindCharColumnsAs">0</property>
-                <property
-                  dataType="System.Int32"
-                  description="The mode used to access the database."
-                  expressionType="Notify"
-                  name="AccessMode"
-                  typeConverter="AccessMode">1</property>
-              </properties>
-              <connections>
-                <connection
-                  refId="Package\Retrieve Tables\Unified DB.Connections[ODBCConnection]"
-                  connectionManagerID="Package.ConnectionManagers[127.0.0.1.unified.unified]"
-                  connectionManagerRefId="Package.ConnectionManagers[127.0.0.1.unified.unified]"
-                  description="The ODBC runtime connection used to access the database."
-                  name="ODBCConnection" />
-              </connections>
-              <outputs>
-                <output
-                  refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output]"
-                  errorRowDisposition="FailComponent"
-                  name="ODBC Source Output"
-                  truncationRowDisposition="FailComponent">
-                  <outputColumns>
-                    <outputColumn
-                      refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output].Columns[table_name]"
-                      dataType="wstr"
-                      externalMetadataColumnId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output].ExternalColumns[table_name]"
-                      length="63"
-                      lineageId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output].Columns[table_name]"
-                      name="table_name" />
-                  </outputColumns>
-                  <externalMetadataColumns
-                    isUsed="True">
-                    <externalMetadataColumn
-                      refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output].ExternalColumns[table_name]"
-                      dataType="wstr"
-                      length="63"
-                      name="table_name" />
-                  </externalMetadataColumns>
-                </output>
-                <output
-                  refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output]"
-                  isErrorOut="true"
-                  name="ODBC Source Error Output">
-                  <outputColumns>
-                    <outputColumn
-                      refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output].Columns[table_name]"
-                      dataType="wstr"
-                      externalMetadataColumnId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output].ExternalColumns[table_name]"
-                      length="63"
-                      lineageId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output].Columns[table_name]"
-                      name="table_name" />
-                    <outputColumn
-                      refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
-                      dataType="i4"
-                      lineageId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
-                      name="ErrorCode"
-                      specialFlags="1" />
-                    <outputColumn
-                      refId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output].Columns[ErrorColumn]"
-                      dataType="i4"
-                      lineageId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Error Output].Columns[ErrorColumn]"
-                      name="ErrorColumn"
-                      specialFlags="2" />
-                  </outputColumns>
-                  <externalMetadataColumns />
-                </output>
-              </outputs>
-            </component>
           </components>
           <paths>
             <path
-              refId="Package\Retrieve Tables.Paths[ODBC Source Output]"
+              refId="Package\Retrieve Tables.Paths[OLE DB Source Output]"
               endId="Package\Retrieve Tables\Recordset Destination.Inputs[Recordset Destination Input]"
-              name="ODBC Source Output"
-              startId="Package\Retrieve Tables\Unified DB.Outputs[ODBC Source Output]" />
+              name="OLE DB Source Output"
+              startId="Package\Retrieve Tables\OLE DB Source.Outputs[OLE DB Source Output]" />
           </paths>
         </pipeline>
       </DTS:ObjectData>
@@ -419,15 +424,20 @@ ORDER BY table_name;</property>
                       UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">SELECT
     "Id",
     "GroupId",
-    "Name",
-    (CASE WHEN "IsArchived" THEN 'Y' ELSE 'N' END)::varchar(1) AS "IsArchived",
+    "Name"::varchar(500) AS "Name",
+    (CASE WHEN "IsArchived" THEN 'Y' ELSE 'N' END)::varchar(1)
+        AS "IsArchived",
     (CASE WHEN "IsHighSecurity" THEN 'Y' ELSE 'N' END)::varchar(1)
         AS "IsHighSecurity",
     "DisplayOrder",
-    replace("CreatedById"::text, '-', '')::varchar(32) AS "CreatedByIdHex",
-    "CreatedOn" AT TIME ZONE 'UTC' AS "CreatedOn",
-    replace("UpdatedById"::text, '-', '')::varchar(32) AS "UpdatedByIdHex",
-    "UpdatedOn" AT TIME ZONE 'UTC' AS "UpdatedOn"
+    replace("CreatedById"::text, '-', '')::varchar(32)
+        AS "CreatedByIdHex",
+    ("CreatedOn" AT TIME ZONE 'UTC')::timestamp(3)
+        AS "CreatedOn",
+    replace("UpdatedById"::text, '-', '')::varchar(32)
+        AS "UpdatedByIdHex",
+    ("UpdatedOn" AT TIME ZONE 'UTC')::timestamp(3)
+        AS "UpdatedOn"
 FROM public."StatCategories";</property>
                     <property
                       dataType="System.Int32"
@@ -505,8 +515,9 @@ FROM public."StatCategories";</property>
                           name="GroupId" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Name]"
                           name="Name" />
                         <outputColumn
@@ -570,7 +581,8 @@ FROM public."StatCategories";</property>
                           name="GroupId" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="Name" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[IsArchived]"
@@ -598,14 +610,12 @@ FROM public."StatCategories";</property>
                           name="UpdatedByIdHex" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[CreatedOn]"
-                          dataType="dbTimeStamp2"
-                          name="CreatedOn"
-                          scale="6" />
+                          dataType="dbTimeStamp"
+                          name="CreatedOn" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[UpdatedOn]"
-                          dataType="dbTimeStamp2"
-                          name="UpdatedOn"
-                          scale="6" />
+                          dataType="dbTimeStamp"
+                          name="UpdatedOn" />
                       </externalMetadataColumns>
                     </output>
                     <output
@@ -627,8 +637,9 @@ FROM public."StatCategories";</property>
                           name="GroupId" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[Name]"
                           name="Name" />
                         <outputColumn
@@ -667,18 +678,16 @@ FROM public."StatCategories";</property>
                           name="UpdatedByIdHex" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[CreatedOn]"
-                          dataType="dbTimeStamp2"
+                          dataType="dbTimeStamp"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[CreatedOn]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[CreatedOn]"
-                          name="CreatedOn"
-                          scale="6" />
+                          name="CreatedOn" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[UpdatedOn]"
-                          dataType="dbTimeStamp2"
+                          dataType="dbTimeStamp"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[UpdatedOn]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[UpdatedOn]"
-                          name="UpdatedOn"
-                          scale="6" />
+                          name="UpdatedOn" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
                           dataType="i4"
@@ -712,7 +721,7 @@ FROM public."StatCategories";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."STATCATEGORIES"</property>
+                      name="OpenRowset">"ETL_TARGET"."STAT_CATEGORIES"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -778,11 +787,12 @@ FROM public."StatCategories";</property>
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[GroupId]"
                           cachedDataType="i4"
                           cachedName="GroupId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[GROUPID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[GROUP_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[GroupId]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Name]"
-                          cachedDataType="nText"
+                          cachedDataType="wstr"
+                          cachedLength="500"
                           cachedName="Name"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Name]" />
@@ -791,48 +801,48 @@ FROM public."StatCategories";</property>
                           cachedDataType="wstr"
                           cachedLength="1"
                           cachedName="IsArchived"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISARCHIVED]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_ARCHIVED]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[IsArchived]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsHighSecurity]"
                           cachedDataType="wstr"
                           cachedLength="1"
                           cachedName="IsHighSecurity"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISHIGHSECURITY]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_HIGH_SECURITY]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[IsHighSecurity]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DisplayOrder]"
                           cachedDataType="i4"
                           cachedName="DisplayOrder"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[DisplayOrder]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="CreatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="UpdatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="UpdatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
                       </inputColumns>
                       <externalMetadataColumns
@@ -843,47 +853,48 @@ FROM public."StatCategories";</property>
                           name="ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[GROUPID]"
-                          dataType="numeric"
-                          name="GROUPID"
-                          precision="10" />
-                        <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="NAME" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISARCHIVED]"
-                          dataType="wstr"
-                          length="1"
-                          name="ISARCHIVED" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISHIGHSECURITY]"
-                          dataType="wstr"
-                          length="1"
-                          name="ISHIGHSECURITY" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[GROUP_ID]"
                           dataType="numeric"
-                          name="DISPLAYORDER"
+                          name="GROUP_ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_ARCHIVED]"
+                          dataType="numeric"
+                          name="IS_ARCHIVED"
+                          precision="1" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_HIGH_SECURITY]"
+                          dataType="numeric"
+                          name="IS_HIGH_SECURITY"
+                          precision="1" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
+                          dataType="numeric"
+                          name="DISPLAY_ORDER"
+                          precision="10" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="CREATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
                           dataType="dbTimeStamp"
-                          name="CREATEDON" />
+                          name="CREATED_ON" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="UPDATED_BY_ID" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          refId="Package\Sequence Container\Copy STAT_CATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           dataType="dbTimeStamp"
-                          name="UPDATEDON" />
+                          name="UPDATED_ON" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -1214,7 +1225,7 @@ FROM public."StatGroups";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."STATGROUPS"</property>
+                      name="OpenRowset">"ETL_TARGET"."STAT_GROUPS"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -1287,41 +1298,41 @@ FROM public."StatGroups";</property>
                           refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DisplayOrder]"
                           cachedDataType="i4"
                           cachedName="DisplayOrder"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
                           lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[DisplayOrder]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
-                          cachedDataType="dbTimeStamp"
-                          cachedName="CreatedOn"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
-                          cachedDataType="dbTimeStamp"
-                          cachedName="UpdatedOn"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
-                          lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsLocationLevel]"
-                          cachedDataType="wstr"
-                          cachedLength="1"
-                          cachedName="IsLocationLevel"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISLOCATIONLEVEL]"
-                          lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[IsLocationLevel]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
+                          cachedDataType="dbTimeStamp"
+                          cachedName="CreatedOn"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
+                          cachedDataType="dbTimeStamp"
+                          cachedName="UpdatedOn"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsLocationLevel]"
+                          cachedDataType="wstr"
+                          cachedLength="1"
+                          cachedName="IsLocationLevel"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_LOCATION_LEVEL]"
+                          lineageId="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source.Outputs[ODBC Source Output].Columns[IsLocationLevel]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -1332,36 +1343,37 @@ FROM public."StatGroups";</property>
                           precision="10" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="NAME" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
                           dataType="numeric"
-                          name="DISPLAYORDER"
+                          name="DISPLAY_ORDER"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          dataType="dbTimeStamp"
-                          name="CREATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
-                          dataType="dbTimeStamp"
-                          name="UPDATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISLOCATIONLEVEL]"
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           dataType="wstr"
-                          length="1"
-                          name="ISLOCATIONLEVEL" />
+                          length="36"
+                          name="CREATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="CREATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="UPDATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="UPDATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_LOCATION_LEVEL]"
+                          dataType="numeric"
+                          name="IS_LOCATION_LEVEL"
+                          precision="1" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -1436,8 +1448,8 @@ FROM public."StatGroups";</property>
                       name="SqlCommand"
                       UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">SELECT
     "Id",
-    "Name",
-    "UnitOfMeasure",
+    "Name"::varchar(500) AS "Name",
+    "UnitOfMeasure"::varchar(500) AS "UnitOfMeasure",
     replace("CreatedById"::text, '-', '')::varchar(32) AS "CreatedByIdHex",
     "CreatedOn" AT TIME ZONE 'UTC' AS "CreatedOn",
     replace("UpdatedById"::text, '-', '')::varchar(32) AS "UpdatedByIdHex",
@@ -1514,14 +1526,16 @@ FROM public."StatMetrics";</property>
                           name="Id" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[Name]"
                           name="Name" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UnitOfMeasure]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[UnitOfMeasure]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UnitOfMeasure]"
                           name="UnitOfMeasure" />
                         <outputColumn
@@ -1568,11 +1582,13 @@ FROM public."StatMetrics";</property>
                           name="Id" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="Name" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[UnitOfMeasure]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="UnitOfMeasure" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[CreatedByIdHex]"
@@ -1614,14 +1630,16 @@ FROM public."StatMetrics";</property>
                           name="Id" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Name]"
                           name="Name" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Error Output].Columns[UnitOfMeasure]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[UnitOfMeasure]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Error Output].Columns[UnitOfMeasure]"
                           name="UnitOfMeasure" />
                         <outputColumn
@@ -1692,7 +1710,7 @@ FROM public."StatMetrics";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."STATMETRICS"</property>
+                      name="OpenRowset">"ETL_TARGET"."STAT_METRICS"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -1756,51 +1774,53 @@ FROM public."StatMetrics";</property>
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[Id]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Name]"
-                          cachedDataType="nText"
+                          cachedDataType="wstr"
+                          cachedLength="500"
                           cachedName="Name"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[Name]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UnitOfMeasure]"
-                          cachedDataType="nText"
+                          cachedDataType="wstr"
+                          cachedLength="500"
                           cachedName="UnitOfMeasure"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UNITOFMEASURE]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UNIT_OF_MEASURE]"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UnitOfMeasure]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsOvertime]"
                           cachedDataType="wstr"
                           cachedLength="1"
                           cachedName="IsOvertime"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISOVERTIME]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_OVERTIME]"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[IsOvertime]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
+                          cachedDataType="dbTimeStamp2"
+                          cachedName="CreatedOn"
+                          cachedScale="6"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="UpdatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
-                          cachedDataType="dbTimeStamp2"
-                          cachedName="CreatedOn"
-                          cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          lineageId="Package\Sequence Container\Copy STAT_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -1811,35 +1831,37 @@ FROM public."StatMetrics";</property>
                           precision="10" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="NAME" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UNITOFMEASURE]"
-                          dataType="nText"
-                          name="UNITOFMEASURE" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          dataType="dbTimeStamp"
-                          name="CREATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
-                          dataType="dbTimeStamp"
-                          name="UPDATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISOVERTIME]"
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UNIT_OF_MEASURE]"
                           dataType="wstr"
-                          length="1"
-                          name="ISOVERTIME" />
+                          length="100"
+                          name="UNIT_OF_MEASURE" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_OVERTIME]"
+                          dataType="numeric"
+                          name="IS_OVERTIME"
+                          precision="1" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="CREATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="CREATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="UPDATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="UPDATED_ON" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -1916,12 +1938,12 @@ FROM public."StatMetrics";</property>
     "Id",
     "DateFrom",
     "DateTo",
-    "PeriodType",
+    "PeriodType"::varchar(50) AS "PeriodType",
     "LocationId",
     "SubCategoryMetricId",
-    "Value",
+    "Value"::varchar(50) AS "Value",
     "Status",
-    "Comment" AS "RecordComment",
+    "Comment"::varchar(1000) AS "Comment",
     replace("CreatedById"::text, '-', '')::varchar(32) AS "CreatedByIdHex",
     "CreatedOn" AT TIME ZONE 'UTC' AS "CreatedOn",
     replace("UpdatedById"::text, '-', '')::varchar(32) AS "UpdatedByIdHex",
@@ -2002,8 +2024,9 @@ FROM public."StatRecords";</property>
                           name="Id" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[PeriodType]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[PeriodType]"
+                          length="50"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[PeriodType]"
                           name="PeriodType" />
                         <outputColumn
@@ -2028,16 +2051,11 @@ FROM public."StatRecords";</property>
                           scale="4" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Status]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Status]"
+                          length="50"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Status]"
                           name="Status" />
-                        <outputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[RecordComment]"
-                          dataType="nText"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[RecordComment]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[RecordComment]"
-                          name="RecordComment" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]"
                           dataType="wstr"
@@ -2105,6 +2123,13 @@ FROM public."StatRecords";</property>
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[SignedOffAt]"
                           name="SignedOffAt"
                           scale="6" />
+                        <outputColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Comment]"
+                          dataType="wstr"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Comment]"
+                          length="1000"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Comment]"
+                          name="Comment" />
                       </outputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -2114,7 +2139,8 @@ FROM public."StatRecords";</property>
                           name="Id" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[PeriodType]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="50"
                           name="PeriodType" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[LocationId]"
@@ -2126,18 +2152,13 @@ FROM public."StatRecords";</property>
                           name="SubCategoryMetricId" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Value]"
-                          dataType="numeric"
-                          name="Value"
-                          precision="18"
-                          scale="4" />
+                          dataType="wstr"
+                          length="50"
+                          name="Value" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Status]"
                           dataType="nText"
                           name="Status" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[RecordComment]"
-                          dataType="nText"
-                          name="RecordComment" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[CreatedByIdHex]"
                           dataType="wstr"
@@ -2185,6 +2206,11 @@ FROM public."StatRecords";</property>
                           dataType="dbTimeStamp2"
                           name="SignedOffAt"
                           scale="6" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Comment]"
+                          dataType="wstr"
+                          length="1000"
+                          name="Comment" />
                       </externalMetadataColumns>
                     </output>
                     <output
@@ -2200,8 +2226,9 @@ FROM public."StatRecords";</property>
                           name="Id" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[PeriodType]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[PeriodType]"
+                          length="50"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[PeriodType]"
                           name="PeriodType" />
                         <outputColumn
@@ -2218,24 +2245,17 @@ FROM public."StatRecords";</property>
                           name="SubCategoryMetricId" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Value]"
-                          dataType="numeric"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Value]"
+                          length="50"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Value]"
-                          name="Value"
-                          precision="18"
-                          scale="4" />
+                          name="Value" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Status]"
                           dataType="nText"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Status]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Status]"
                           name="Status" />
-                        <outputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[RecordComment]"
-                          dataType="nText"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[RecordComment]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[RecordComment]"
-                          name="RecordComment" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[CreatedByIdHex]"
                           dataType="wstr"
@@ -2304,6 +2324,13 @@ FROM public."StatRecords";</property>
                           name="SignedOffAt"
                           scale="6" />
                         <outputColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Comment]"
+                          dataType="wstr"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Comment]"
+                          length="1000"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[Comment]"
+                          name="Comment" />
+                        <outputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
                           dataType="i4"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Error Output].Columns[ErrorCode]"
@@ -2336,7 +2363,7 @@ FROM public."StatRecords";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."STATRECORDS"</property>
+                      name="OpenRowset">"ETL_TARGET"."STAT_RECORDS"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -2399,18 +2426,6 @@ FROM public."StatRecords";</property>
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ID]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Id]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[LocationId]"
-                          cachedDataType="i4"
-                          cachedName="LocationId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATIONID]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[LocationId]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[SubCategoryMetricId]"
-                          cachedDataType="i4"
-                          cachedName="SubCategoryMetricId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUBCATEGORYMETRICID]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[SubCategoryMetricId]" />
-                        <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Value]"
                           cachedDataType="numeric"
                           cachedName="Value"
@@ -2420,89 +2435,98 @@ FROM public."StatRecords";</property>
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Value]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Status]"
-                          cachedDataType="nText"
+                          cachedDataType="wstr"
+                          cachedLength="50"
                           cachedName="Status"
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[STATUS]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Status]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[PerformedAtLocationId]"
-                          cachedDataType="i4"
-                          cachedName="PerformedAtLocationId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[PERFORMEDATLOCATIONID]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[PerformedAtLocationId]" />
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DateFrom]"
+                          cachedDataType="dbDate"
+                          cachedName="DateFrom"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATE_FROM]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[DateFrom]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DateTo]"
+                          cachedDataType="dbDate"
+                          cachedName="DateTo"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATE_TO]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[DateTo]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[PeriodType]"
-                          cachedDataType="nText"
+                          cachedDataType="wstr"
+                          cachedLength="50"
                           cachedName="PeriodType"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[PERIODTYPE]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[PERIOD_TYPE]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[PeriodType]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[RecordComment]"
-                          cachedDataType="nText"
-                          cachedName="RecordComment"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RECORD_COMMENT]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[RecordComment]" />
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[LocationId]"
+                          cachedDataType="i4"
+                          cachedName="LocationId"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATION_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[LocationId]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[SubCategoryMetricId]"
+                          cachedDataType="i4"
+                          cachedName="SubCategoryMetricId"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUB_CATEGORY_METRIC_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[SubCategoryMetricId]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UserIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="UserIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USERID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USER_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[UserIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[SignedOffByUserIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="SignedOffByUserIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNEDOFFBYUSERID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNED_OFF_BY_USER_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[SignedOffByUserIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[SignedOffAt]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="SignedOffAt"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNEDOFFAT]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNED_OFF_AT]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[SignedOffAt]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DateTo]"
-                          cachedDataType="dbDate"
-                          cachedName="DateTo"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATETO]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[DateTo]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DateFrom]"
-                          cachedDataType="dbDate"
-                          cachedName="DateFrom"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATEFROM]"
-                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[DateFrom]" />
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="CreatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="CreatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="UpdatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="UpdatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Comment]"
+                          cachedDataType="wstr"
+                          cachedLength="1000"
+                          cachedName="Comment"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[COMMENT_TEXT]"
+                          lineageId="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source.Outputs[ODBC Source Output].Columns[Comment]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -2512,28 +2536,6 @@ FROM public."StatRecords";</property>
                           name="ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATEFROM]"
-                          dataType="dbTimeStamp"
-                          name="DATEFROM" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATETO]"
-                          dataType="dbTimeStamp"
-                          name="DATETO" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[PERIODTYPE]"
-                          dataType="nText"
-                          name="PERIODTYPE" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATIONID]"
-                          dataType="numeric"
-                          name="LOCATIONID"
-                          precision="10" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUBCATEGORYMETRICID]"
-                          dataType="numeric"
-                          name="SUBCATEGORYMETRICID"
-                          precision="10" />
-                        <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[VALUE]"
                           dataType="numeric"
                           name="VALUE"
@@ -2541,49 +2543,69 @@ FROM public."StatRecords";</property>
                           scale="4" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[STATUS]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="50"
                           name="STATUS" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[RECORD_COMMENT]"
-                          dataType="nText"
-                          name="RECORD_COMMENT" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATE_FROM]"
                           dataType="dbTimeStamp"
-                          name="CREATEDON" />
+                          name="DATE_FROM" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DATE_TO]"
                           dataType="dbTimeStamp"
-                          name="UPDATEDON" />
+                          name="DATE_TO" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USERID]"
-                          dataType="bytes"
-                          length="16"
-                          name="USERID" />
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[PERIOD_TYPE]"
+                          dataType="wstr"
+                          length="50"
+                          name="PERIOD_TYPE" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNEDOFFAT]"
-                          dataType="dbTimeStamp"
-                          name="SIGNEDOFFAT" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNEDOFFBYUSERID]"
-                          dataType="bytes"
-                          length="16"
-                          name="SIGNEDOFFBYUSERID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[PERFORMEDATLOCATIONID]"
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATION_ID]"
                           dataType="numeric"
-                          name="PERFORMEDATLOCATIONID"
+                          name="LOCATION_ID"
                           precision="10" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUB_CATEGORY_METRIC_ID]"
+                          dataType="numeric"
+                          name="SUB_CATEGORY_METRIC_ID"
+                          precision="10" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[COMMENT_TEXT]"
+                          dataType="wstr"
+                          length="1000"
+                          name="COMMENT_TEXT" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USER_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="USER_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNED_OFF_BY_USER_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="SIGNED_OFF_BY_USER_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNED_OFF_AT]"
+                          dataType="dbTimeStamp"
+                          name="SIGNED_OFF_AT" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="CREATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="CREATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="UPDATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_RECORDS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="UPDATED_ON" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -2951,7 +2973,7 @@ FROM public."StatSignoffs";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."STATSIGNOFFS"</property>
+                      name="OpenRowset">"ETL_TARGET"."STAT_SIGNOFFS"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -3014,12 +3036,6 @@ FROM public."StatSignoffs";</property>
                           externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ID]"
                           lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[Id]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[LocationId]"
-                          cachedDataType="i4"
-                          cachedName="LocationId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATIONID]"
-                          lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[LocationId]" />
-                        <inputColumn
                           refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Month]"
                           cachedDataType="i4"
                           cachedName="Month"
@@ -3036,42 +3052,48 @@ FROM public."StatSignoffs";</property>
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="UserIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USERID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USER_ID]"
                           lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[UserIdHex]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[LocationId]"
+                          cachedDataType="i4"
+                          cachedName="LocationId"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATION_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[LocationId]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[SignoffDate]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="SignoffDate"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNOFFDATE]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNOFF_DATE]"
                           lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[SignoffDate]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="CreatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="CreatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="UpdatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="UpdatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           lineageId="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
                       </inputColumns>
                       <externalMetadataColumns
@@ -3082,47 +3104,47 @@ FROM public."StatSignoffs";</property>
                           name="ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USERID]"
-                          dataType="bytes"
-                          length="16"
-                          name="USERID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATIONID]"
-                          dataType="numeric"
-                          name="LOCATIONID"
-                          precision="10" />
-                        <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[MONTH]"
                           dataType="numeric"
                           name="MONTH"
-                          precision="10" />
+                          precision="2" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[YEAR]"
                           dataType="numeric"
                           name="YEAR"
+                          precision="4" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[USER_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="USER_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[LOCATION_ID]"
+                          dataType="numeric"
+                          name="LOCATION_ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNOFFDATE]"
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SIGNOFF_DATE]"
                           dataType="dbTimeStamp"
-                          name="SIGNOFFDATE" />
+                          name="SIGNOFF_DATE" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="CREATED_BY_ID" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
                           dataType="dbTimeStamp"
-                          name="CREATEDON" />
+                          name="CREATED_ON" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="UPDATED_BY_ID" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          refId="Package\Sequence Container\Copy STAT_SIGNOFFS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           dataType="dbTimeStamp"
-                          name="UPDATEDON" />
+                          name="UPDATED_ON" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -3198,7 +3220,7 @@ FROM public."StatSignoffs";</property>
                       UITypeEditor="Microsoft.DataTransformationServices.Controls.ModalMultilineStringEditor, Microsoft.DataTransformationServices.Controls, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91">SELECT
     "Id",
     "CategoryId",
-    "Name",
+    "Name"::varchar(500) AS "Name",
     "DisplayOrder",
     replace("CreatedById"::text, '-', '')::varchar(32) AS "CreatedByIdHex",
     "CreatedOn" AT TIME ZONE 'UTC' AS "CreatedOn",
@@ -3282,8 +3304,9 @@ FROM public."SubCategories";</property>
                           name="CategoryId" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Name]"
                           name="Name" />
                         <outputColumn
@@ -3340,7 +3363,8 @@ FROM public."SubCategories";</property>
                           name="CategoryId" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="Name" />
                         <externalMetadataColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[DisplayOrder]"
@@ -3392,8 +3416,9 @@ FROM public."SubCategories";</property>
                           name="CategoryId" />
                         <outputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[Name]"
-                          dataType="nText"
+                          dataType="wstr"
                           externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].ExternalColumns[Name]"
+                          length="500"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Error Output].Columns[Name]"
                           name="Name" />
                         <outputColumn
@@ -3470,7 +3495,7 @@ FROM public."SubCategories";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."SUBCATEGORIES"</property>
+                      name="OpenRowset">"ETL_TARGET"."SUB_CATEGORIES"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -3533,58 +3558,59 @@ FROM public."SubCategories";</property>
                           externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ID]"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Id]" />
                         <inputColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CategoryId]"
-                          cachedDataType="i4"
-                          cachedName="CategoryId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CATEGORYID]"
-                          lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[CategoryId]" />
-                        <inputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[Name]"
-                          cachedDataType="nText"
+                          cachedDataType="wstr"
+                          cachedLength="500"
                           cachedName="Name"
                           externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[Name]" />
                         <inputColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CategoryId]"
+                          cachedDataType="i4"
+                          cachedName="CategoryId"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CATEGORY_ID]"
+                          lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[CategoryId]" />
+                        <inputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DisplayOrder]"
                           cachedDataType="i4"
                           cachedName="DisplayOrder"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[DisplayOrder]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsArchived]"
-                          cachedDataType="wstr"
-                          cachedLength="1"
-                          cachedName="IsArchived"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISARCHIVED]"
-                          lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[IsArchived]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
                           cachedDataType="wstr"
                           cachedLength="32"
                           cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="CreatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="UpdatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
                           cachedDataType="dbTimeStamp2"
                           cachedName="UpdatedOn"
                           cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
                           lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsArchived]"
+                          cachedDataType="wstr"
+                          cachedLength="1"
+                          cachedName="IsArchived"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_ARCHIVED]"
+                          lineageId="Package\Sequence Container\Copy SUBCATEGORIES\ODBC Source.Outputs[ODBC Source Output].Columns[IsArchived]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -3594,42 +3620,43 @@ FROM public."SubCategories";</property>
                           name="ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CATEGORYID]"
-                          dataType="numeric"
-                          name="CATEGORYID"
-                          precision="10" />
-                        <externalMetadataColumn
                           refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[NAME]"
-                          dataType="nText"
+                          dataType="wstr"
+                          length="500"
                           name="NAME" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CATEGORY_ID]"
                           dataType="numeric"
-                          name="DISPLAYORDER"
+                          name="CATEGORY_ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
+                          dataType="numeric"
+                          name="DISPLAY_ORDER"
+                          precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          dataType="dbTimeStamp"
-                          name="CREATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
-                          dataType="dbTimeStamp"
-                          name="UPDATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISARCHIVED]"
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           dataType="wstr"
-                          length="1"
-                          name="ISARCHIVED" />
+                          length="36"
+                          name="CREATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="CREATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          dataType="wstr"
+                          length="36"
+                          name="UPDATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="UPDATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_ARCHIVED]"
+                          dataType="numeric"
+                          name="IS_ARCHIVED"
+                          precision="1" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -3997,7 +4024,7 @@ FROM public."SubCategoryMetrics";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">"ETL_TARGET"."SUBCATEGORYMETRICS"</property>
+                      name="OpenRowset">"ETL_TARGET"."SUB_CATEGORY_METRICS"</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -4063,62 +4090,62 @@ FROM public."SubCategoryMetrics";</property>
                           refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[SubCategoryId]"
                           cachedDataType="i4"
                           cachedName="SubCategoryId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUBCATEGORYID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUB_CATEGORY_ID]"
                           lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[SubCategoryId]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[MetricId]"
                           cachedDataType="i4"
                           cachedName="MetricId"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[METRICID]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[METRIC_ID]"
                           lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[MetricId]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[DisplayOrder]"
                           cachedDataType="i4"
                           cachedName="DisplayOrder"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
                           lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[DisplayOrder]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="CreatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
+                          cachedDataType="dbTimeStamp2"
+                          cachedName="CreatedOn"
+                          cachedScale="6"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
+                          cachedDataType="wstr"
+                          cachedLength="32"
+                          cachedName="UpdatedByIdHex"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
+                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
+                        <inputColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
+                          cachedDataType="dbTimeStamp2"
+                          cachedName="UpdatedOn"
+                          cachedScale="6"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsRequired]"
                           cachedDataType="wstr"
                           cachedLength="1"
                           cachedName="IsRequired"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISREQUIRED]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_REQUIRED]"
                           lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[IsRequired]" />
                         <inputColumn
                           refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[IsArchived]"
                           cachedDataType="wstr"
                           cachedLength="1"
                           cachedName="IsArchived"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISARCHIVED]"
+                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_ARCHIVED]"
                           lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[IsArchived]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="CreatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedByIdHex]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedByIdHex]"
-                          cachedDataType="wstr"
-                          cachedLength="32"
-                          cachedName="UpdatedByIdHex"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedByIdHex]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[CreatedOn]"
-                          cachedDataType="dbTimeStamp2"
-                          cachedName="CreatedOn"
-                          cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[CreatedOn]" />
-                        <inputColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].Columns[UpdatedOn]"
-                          cachedDataType="dbTimeStamp2"
-                          cachedName="UpdatedOn"
-                          cachedScale="6"
-                          externalMetadataColumnId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
-                          lineageId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source.Outputs[ODBC Source Output].Columns[UpdatedOn]" />
                       </inputColumns>
                       <externalMetadataColumns
                         isUsed="True">
@@ -4128,48 +4155,48 @@ FROM public."SubCategoryMetrics";</property>
                           name="ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUBCATEGORYID]"
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[SUB_CATEGORY_ID]"
                           dataType="numeric"
-                          name="SUBCATEGORYID"
+                          name="SUB_CATEGORY_ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[METRICID]"
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[METRIC_ID]"
                           dataType="numeric"
-                          name="METRICID"
+                          name="METRIC_ID"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAYORDER]"
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[DISPLAY_ORDER]"
                           dataType="numeric"
-                          name="DISPLAYORDER"
+                          name="DISPLAY_ORDER"
                           precision="10" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="CREATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATEDON]"
-                          dataType="dbTimeStamp"
-                          name="CREATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDBYID]"
-                          dataType="bytes"
-                          length="16"
-                          name="UPDATEDBYID" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATEDON]"
-                          dataType="dbTimeStamp"
-                          name="UPDATEDON" />
-                        <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISREQUIRED]"
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_BY_ID]"
                           dataType="wstr"
-                          length="1"
-                          name="ISREQUIRED" />
+                          length="36"
+                          name="CREATED_BY_ID" />
                         <externalMetadataColumn
-                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[ISARCHIVED]"
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[CREATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="CREATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_BY_ID]"
                           dataType="wstr"
-                          length="1"
-                          name="ISARCHIVED" />
+                          length="36"
+                          name="UPDATED_BY_ID" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[UPDATED_ON]"
+                          dataType="dbTimeStamp"
+                          name="UPDATED_ON" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_REQUIRED]"
+                          dataType="numeric"
+                          name="IS_REQUIRED"
+                          precision="1" />
+                        <externalMetadataColumn
+                          refId="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\OLE DB Destination.Inputs[OLE DB Destination Input].ExternalColumns[IS_ARCHIVED]"
+                          dataType="numeric"
+                          name="IS_ARCHIVED"
+                          precision="1" />
                       </externalMetadataColumns>
                     </input>
                   </inputs>
@@ -4563,55 +4590,45 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Retrieve Tables">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
-        <NodeLayout
-          Size="132,42"
-          Id="Package\Retrieve Tables\Unified DB"
-          TopLeft="203,150" />
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="187,42"
           Id="Package\Retrieve Tables\Recordset Destination"
-          TopLeft="181,290" />
+          TopLeft="5.50000000000001,107.5" />
+        <NodeLayout
+          Size="157,42"
+          Id="Package\Retrieve Tables\OLE DB Source"
+          TopLeft="20.5,5.5" />
         <EdgeLayout
-          Id="Package\Retrieve Tables.Paths[ODBC Source Output]"
-          TopLeft="271.75,192">
+          Id="Package\Retrieve Tables.Paths[OLE DB Source Output]"
+          TopLeft="99,47.5">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,98"
+              EndConnector="0,60"
               Start="0,0"
-              End="0,90.5">
+              End="0,52.5">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,90.5" />
+                    End="0,52.5" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
     </LayoutInfo>
   </TaskHost>
-  <PipelineComponentMetadata
-    design-time-name="Package\Retrieve Tables\Unified DB">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
   <TaskHost
     design-time-name="Package\Sequence Container\Copy STAT_CATEGORIES">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source"
@@ -4639,9 +4656,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4672,7 +4687,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_GROUPS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source"
@@ -4680,29 +4695,27 @@ FROM public."SubCategoryMetrics";</property>
         <NodeLayout
           Size="177,42"
           Id="Package\Sequence Container\Copy STAT_GROUPS\OLE DB Destination"
-          TopLeft="5.50000000000001,107.5" />
+          TopLeft="5.50000000000001,102.5" />
         <EdgeLayout
           Id="Package\Sequence Container\Copy STAT_GROUPS.Paths[ODBC Source Output]"
           TopLeft="94,47.5">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,60"
+              EndConnector="0,55"
               Start="0,0"
-              End="0,52.5">
+              End="0,47.5">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,52.5" />
+                    End="0,47.5" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4733,7 +4746,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_METRICS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_METRICS\ODBC Source"
@@ -4761,9 +4774,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4794,7 +4805,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_RECORDS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source"
@@ -4822,9 +4833,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4855,7 +4864,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_SIGNOFFS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source"
@@ -4883,9 +4892,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4916,7 +4923,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy SUB_CATEGORY_METRICS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source"
@@ -4944,9 +4951,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4977,7 +4982,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy SUBCATEGORIES">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="177,42"
           Id="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination"
@@ -5005,9 +5010,7 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -5031,6 +5034,14 @@ FROM public."SubCategoryMetrics";</property>
         <Name>TableInfoObjectType</Name>
         <Value
           type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\Retrieve Tables\OLE DB Source">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
       </Property>
     </Properties>
   </PipelineComponentMetadata>
