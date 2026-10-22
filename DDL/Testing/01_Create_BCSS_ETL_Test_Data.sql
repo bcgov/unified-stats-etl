@@ -49,7 +49,7 @@ BEGIN
             v_reporting_month;
     END IF;
 
-    IF BTRIM(v_test_run_key) = '' THEN
+    IF v_test_run_key IS NULL OR BTRIM(v_test_run_key) = '' THEN
         RAISE EXCEPTION 'v_test_run_key is required.';
     END IF;
 
@@ -92,7 +92,7 @@ BEGIN
             SELECT COUNT(*), MIN("Id")
               FROM etl."BiOracleStatMappingSets"
              WHERE "EffectiveDate" <= $1
-               AND ("ExpiryDate" IS NULL OR "ExpiryDate" >= $1)
+               AND ("ExpiryDate" IS NULL OR $1 < "ExpiryDate")
         '
         INTO v_mapping_set_count, v_mapping_set_id
         USING v_reporting_month;
@@ -103,7 +103,7 @@ BEGIN
             SELECT COUNT(*), MIN("Id")
               FROM etl."BiOracleStatMappingSet"
              WHERE "EffectiveDate" <= $1
-               AND ("ExpiryDate" IS NULL OR "ExpiryDate" >= $1)
+               AND ("ExpiryDate" IS NULL OR $1 < "ExpiryDate")
         '
         INTO v_mapping_set_count, v_mapping_set_id
         USING v_reporting_month;
@@ -128,6 +128,8 @@ BEGIN
       FROM "Locations" l
       JOIN etl."BiOracleLocationMapping" lm
         ON lm."JustinLocationCode" = l."JustinLocationCode"
+       AND lm."EffectiveDate" <= v_reporting_month
+       AND (lm."ExpiryDate" IS NULL OR lm."ExpiryDate" >= v_reporting_month)
      WHERE l."Id" = v_performed_at_location_id;
 
     IF v_crosswalk_count <> 1 THEN
@@ -141,11 +143,17 @@ BEGIN
            COUNT(DISTINCT "SubCategoryMetricId")
       INTO v_mapping_row_count,
            v_distinct_scm_count
-      FROM etl."BiOracleStatMappings"
-     WHERE "MappingSetId" = v_mapping_set_id;
+      FROM etl."BiOracleStatMappings" m
+      JOIN "SubCategoryMetrics" scm ON scm."Id" = m."SubCategoryMetricId"
+      JOIN "SubCategories" sc ON sc."Id" = scm."SubCategoryId"
+      JOIN "StatCategories" cat ON cat."Id" = sc."CategoryId"
+     WHERE m."MappingSetId" = v_mapping_set_id
+       AND COALESCE(scm."IsArchived", FALSE) = FALSE
+       AND COALESCE(sc."IsArchived", FALSE) = FALSE
+       AND COALESCE(cat."IsArchived", FALSE) = FALSE;
 
     IF v_mapping_row_count = 0 THEN
-        RAISE EXCEPTION 'MappingSetId % contains no mappings.', v_mapping_set_id;
+        RAISE EXCEPTION 'MappingSetId % contains no eligible mappings.', v_mapping_set_id;
     END IF;
 
     ---------------------------------------------------------------------------
@@ -171,14 +179,12 @@ BEGIN
          OR cat."Id" IS NULL
          OR sg."Id" IS NULL
          OR sm."Id" IS NULL
-         OR COALESCE(sc."IsArchived", FALSE)
-         OR COALESCE(cat."IsArchived", FALSE)
          OR sg."Name" NOT IN ('Non-Supervision', 'Supervision', 'Location Level')
        );
 
     IF v_unusable_mapping_count <> 0 THEN
         RAISE EXCEPTION
-            'MappingSetId % contains % mapping row(s) whose SCM/taxonomy is missing, archived, or uses an unsupported StatGroup.',
+            'MappingSetId % contains % mapping row(s) whose SCM/taxonomy is missing or uses an unsupported StatGroup.',
             v_mapping_set_id,
             v_unusable_mapping_count;
     END IF;
@@ -235,7 +241,10 @@ BEGIN
         ON l."Id" = COALESCE(sr."PerformedAtLocationId", sr."LocationId")
       JOIN etl."BiOracleLocationMapping" lm
         ON lm."JustinLocationCode" = l."JustinLocationCode"
-     WHERE sr."Status" IN ('Submitted', 'SignedOff')
+       AND lm."EffectiveDate" <= v_reporting_month
+       AND (lm."ExpiryDate" IS NULL OR lm."ExpiryDate" >= v_reporting_month)
+     WHERE sr."Status" = 'SignedOff'
+       AND COALESCE(scm."IsArchived", FALSE) = FALSE
        AND COALESCE(cat."IsArchived", FALSE) = FALSE
        AND COALESCE(sc."IsArchived", FALSE) = FALSE
        AND sr."DateFrom" < (v_reporting_month + INTERVAL '1 month')
@@ -283,8 +292,15 @@ BEGIN
       ) m
       JOIN "SubCategoryMetrics" scm
         ON scm."Id" = m."SubCategoryMetricId"
+      JOIN "SubCategories" sc
+        ON sc."Id" = scm."SubCategoryId"
+      JOIN "StatCategories" cat
+        ON cat."Id" = sc."CategoryId"
       JOIN "StatMetrics" sm
-        ON sm."Id" = scm."MetricId";
+        ON sm."Id" = scm."MetricId"
+     WHERE COALESCE(scm."IsArchived", FALSE) = FALSE
+       AND COALESCE(sc."IsArchived", FALSE) = FALSE
+       AND COALESCE(cat."IsArchived", FALSE) = FALSE;
 
     IF v_ot_scm_count > 0 AND v_regular_hours < 7 THEN
         RAISE EXCEPTION
@@ -346,9 +362,16 @@ BEGIN
     ) m
     JOIN "SubCategoryMetrics" scm
       ON scm."Id" = m."SubCategoryMetricId"
+    JOIN "SubCategories" sc
+      ON sc."Id" = scm."SubCategoryId"
+    JOIN "StatCategories" cat
+      ON cat."Id" = sc."CategoryId"
     JOIN "StatMetrics" sm
       ON sm."Id" = scm."MetricId"
-    WHERE COALESCE(sm."IsOvertime", FALSE) = FALSE
+    WHERE COALESCE(scm."IsArchived", FALSE) = FALSE
+      AND COALESCE(sc."IsArchived", FALSE) = FALSE
+      AND COALESCE(cat."IsArchived", FALSE) = FALSE
+      AND COALESCE(sm."IsOvertime", FALSE) = FALSE
     ORDER BY scm."Id";
 
     GET DIAGNOSTICS v_inserted_non_ot = ROW_COUNT;
@@ -402,9 +425,16 @@ BEGIN
     ) m
     JOIN "SubCategoryMetrics" scm
       ON scm."Id" = m."SubCategoryMetricId"
+    JOIN "SubCategories" sc
+      ON sc."Id" = scm."SubCategoryId"
+    JOIN "StatCategories" cat
+      ON cat."Id" = sc."CategoryId"
     JOIN "StatMetrics" sm
       ON sm."Id" = scm."MetricId"
-    WHERE COALESCE(sm."IsOvertime", FALSE) = TRUE
+    WHERE COALESCE(scm."IsArchived", FALSE) = FALSE
+      AND COALESCE(sc."IsArchived", FALSE) = FALSE
+      AND COALESCE(cat."IsArchived", FALSE) = FALSE
+      AND COALESCE(sm."IsOvertime", FALSE) = TRUE
     ORDER BY scm."Id";
 
     GET DIAGNOSTICS v_inserted_ot = ROW_COUNT;

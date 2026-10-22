@@ -12,8 +12,8 @@
   DTS:ObjectName="BCSS Stats Replicate"
   DTS:PackageType="5"
   DTS:ProtectionLevel="0"
-  DTS:VersionBuild="80"
-  DTS:VersionGUID="{FB2EF914-D009-43F1-A835-B06669494267}">
+  DTS:VersionBuild="81"
+  DTS:VersionGUID="{A63AFE4D-D262-4347-BC7E-ED842A29A328}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -95,23 +95,100 @@
       DTS:CreationName=""
       DTS:DTSID="{FEFB4EA9-1B8E-4CE8-8FD4-2B9CC358E84D}"
       DTS:EvaluateAsExpression="True"
-      DTS:Expression="@[$Project::pOracleTargetSchema]"
+      DTS:Expression="UPPER(@[$Project::pOracleTargetSchema])"
       DTS:IncludeInDebugDump="2345"
       DTS:Namespace="User"
       DTS:ObjectName="TargetSchema">
       <DTS:VariableValue
-        DTS:DataType="8">COURTS</DTS:VariableValue>
+        DTS:DataType="8">ETL_TARGET</DTS:VariableValue>
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
-      DTS:DTSID="{C70F1F9A-CAF8-49B9-A890-96264A923B80}"
+      DTS:DTSID="{5F4D27D6-57DF-4ABD-804B-22169B3D354F}"
       DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;TRUNCATE TABLE &quot; + @[User::TableName]"
+      DTS:Expression="&quot;SELECT table_name FROM all_tables WHERE owner = '&quot; + @[User::TargetSchema] + &quot;' AND (UPPER(table_name) LIKE 'STAT%' OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')) ORDER BY table_name&quot;"
       DTS:IncludeInDebugDump="2345"
       DTS:Namespace="User"
-      DTS:ObjectName="TruncateSql">
+      DTS:ObjectName="RetrieveTablesSql">
       <DTS:VariableValue
-        DTS:DataType="8">TRUNCATE TABLE </DTS:VariableValue>
+        DTS:DataType="8">SELECT table_name FROM all_tables WHERE owner = 'ETL_TARGET' AND (UPPER(table_name) LIKE 'STAT%' OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')) ORDER BY table_name</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{168BE5BF-AAEF-4E31-97DC-57462648C3E4}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_GROUPS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatGroups">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_GROUPS&quot;</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{596291C5-27B0-4A4B-A79F-7588D0722C7E}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_METRICS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatMetrics">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_METRICS&quot;</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{5DE7562F-DD9E-4B46-8EE8-2E1FBA5EDCC6}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_CATEGORIES\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatCategories">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_CATEGORIES&quot;</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{BAE47C16-2247-41F2-AD56-095ECBDD608F}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;SUB_CATEGORIES\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationSubCategories">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;SUB_CATEGORIES&quot;</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{ABCD2BB8-3320-4621-B401-DE80DD1A27A8}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;SUB_CATEGORY_METRICS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationSubCategoryMetrics">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;SUB_CATEGORY_METRICS&quot;</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{10BED314-78BA-49D6-B5CB-859BEF72EC6B}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_RECORDS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatRecords">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_RECORDS&quot;</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{67010968-8C90-4CBE-85DF-AB0ABEB476E4}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_SIGNOFFS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatSignoffs">
+      <DTS:VariableValue
+        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_SIGNOFFS&quot;</DTS:VariableValue>
     </DTS:Variable>
   </DTS:Variables>
   <DTS:Executables>
@@ -128,9 +205,9 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := UPPER(?);&#xA;BEGIN&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'ENABLED'&#xA;AND table_name IN (&#xA;              'STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS'&#xA;          )&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner ||&#xA;            '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; DISABLE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := ?;&#xA;    v_required_count PLS_INTEGER;&#xA;BEGIN&#xA;    IF v_schema IS NULL OR NOT REGEXP_LIKE(v_schema, '^[A-Z][A-Z0-9_$#]{0,127}$', 'c') THEN&#xA;        RAISE_APPLICATION_ERROR(-20001, 'Invalid Oracle target schema identifier');&#xA;    END IF;&#xA;    SELECT COUNT(*) INTO v_required_count&#xA;    FROM all_tables&#xA;    WHERE owner = v_schema&#xA;      AND table_name IN ('STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS');&#xA;    IF v_required_count &lt;&gt; 7 THEN&#xA;        RAISE_APPLICATION_ERROR(-20002, 'Target schema ' || v_schema ||&#xA;            ' is missing required replication tables: found ' || v_required_count || ' of 7');&#xA;    END IF;&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'ENABLED'&#xA;          AND table_name IN ('STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS')&#xA;    ) LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner || '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; DISABLE CONSTRAINT &quot;' || REPLACE(c.constraint_name, '&quot;', '&quot;&quot;') || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
           <SQLTask:ParameterBinding
-            SQLTask:ParameterName="TargetSchema"
+            SQLTask:ParameterName="0"
             SQLTask:DtsVariableName="User::TargetSchema"
             SQLTask:ParameterDirection="Input"
             SQLTask:DataType="129"
@@ -151,9 +228,9 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := UPPER(?);&#xA;BEGIN&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'DISABLED'&#xA;AND table_name IN (&#xA;              'STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS'&#xA;          )&#xA;    )&#xA;    LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner ||&#xA;            '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; ENABLE VALIDATE CONSTRAINT &quot;' || c.constraint_name || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+          SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := ?;&#xA;BEGIN&#xA;    IF v_schema IS NULL OR NOT REGEXP_LIKE(v_schema, '^[A-Z][A-Z0-9_$#]{0,127}$', 'c') THEN&#xA;        RAISE_APPLICATION_ERROR(-20001, 'Invalid Oracle target schema identifier');&#xA;    END IF;&#xA;    FOR c IN (&#xA;        SELECT owner, table_name, constraint_name&#xA;        FROM all_constraints&#xA;        WHERE owner = v_schema&#xA;          AND constraint_type = 'R'&#xA;          AND status = 'DISABLED'&#xA;          AND table_name IN ('STAT_GROUPS',&#xA;              'STAT_METRICS',&#xA;              'STAT_CATEGORIES',&#xA;              'SUB_CATEGORIES',&#xA;              'SUB_CATEGORY_METRICS',&#xA;              'STAT_RECORDS',&#xA;              'STAT_SIGNOFFS')&#xA;    ) LOOP&#xA;        EXECUTE IMMEDIATE&#xA;            'ALTER TABLE &quot;' || c.owner || '&quot;.&quot;' || c.table_name ||&#xA;            '&quot; ENABLE VALIDATE CONSTRAINT &quot;' || REPLACE(c.constraint_name, '&quot;', '&quot;&quot;') || '&quot;';&#xA;    END LOOP;&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
           <SQLTask:ParameterBinding
-            SQLTask:ParameterName="TargetSchema"
+            SQLTask:ParameterName="0"
             SQLTask:DtsVariableName="User::TargetSchema"
             SQLTask:ParameterDirection="Input"
             SQLTask:DataType="129"
@@ -194,8 +271,10 @@
           <DTS:ObjectData>
             <SQLTask:SqlTaskData
               SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
-              SQLTask:SqlStmtSourceType="Variable"
-              SQLTask:SqlStatementSource="User::TruncateSql" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+              SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := ?;&#xA;    v_table VARCHAR2(128) := ?;&#xA;BEGIN&#xA;    IF v_schema IS NULL OR NOT REGEXP_LIKE(v_schema, '^[A-Z][A-Z0-9_$#]{0,127}$', 'c') THEN&#xA;        RAISE_APPLICATION_ERROR(-20001, 'Invalid Oracle target schema identifier');&#xA;    END IF;&#xA;    IF v_table IS NULL OR NOT REGEXP_LIKE(v_table, '^[A-Z][A-Z0-9_$#]{0,127}$', 'c') THEN&#xA;        RAISE_APPLICATION_ERROR(-20003, 'Unsafe Oracle replication table identifier');&#xA;    END IF;&#xA;    EXECUTE IMMEDIATE 'TRUNCATE TABLE &quot;' || v_schema || '&quot;.&quot;' || v_table || '&quot;';&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+              <SQLTask:ParameterBinding SQLTask:ParameterName="0" SQLTask:DtsVariableName="User::TargetSchema" SQLTask:ParameterDirection="Input" SQLTask:DataType="129" SQLTask:ParameterSize="0" />
+              <SQLTask:ParameterBinding SQLTask:ParameterName="1" SQLTask:DtsVariableName="User::TableName" SQLTask:ParameterDirection="Input" SQLTask:DataType="129" SQLTask:ParameterSize="0" />
+            </SQLTask:SqlTaskData>
           </DTS:ObjectData>
         </DTS:Executable>
       </DTS:Executables>
@@ -258,7 +337,7 @@ ORDER BY table_name;</property>
                 <property
                   dataType="System.String"
                   description="The variable that contains the SQL command to be executed."
-                  name="SqlCommandVariable"></property>
+                  name="SqlCommandVariable">User::RetrieveTablesSql</property>
                 <property
                   dataType="System.Int32"
                   description="Specifies the column code page to use when code page information is unavailable from the data source."
@@ -271,7 +350,7 @@ ORDER BY table_name;</property>
                   dataType="System.Int32"
                   description="Specifies the mode used to access the database."
                   name="AccessMode"
-                  typeConverter="AccessMode">2</property>
+                  typeConverter="AccessMode">3</property>
                 <property
                   dataType="System.String"
                   description="The mappings between the parameters in the SQL command and variables."
@@ -725,7 +804,7 @@ FROM public."StatCategories";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationStatCategories</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -743,7 +822,7 @@ FROM public."StatCategories";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -1229,7 +1308,7 @@ FROM public."StatGroups";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationStatGroups</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -1247,7 +1326,7 @@ FROM public."StatGroups";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -1714,7 +1793,7 @@ FROM public."StatMetrics";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationStatMetrics</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -1732,7 +1811,7 @@ FROM public."StatMetrics";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -2367,7 +2446,7 @@ FROM public."StatRecords";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationStatRecords</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -2385,7 +2464,7 @@ FROM public."StatRecords";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -2977,7 +3056,7 @@ FROM public."StatSignoffs";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationStatSignoffs</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -2995,7 +3074,7 @@ FROM public."StatSignoffs";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -3499,7 +3578,7 @@ FROM public."SubCategories";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationSubCategories</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -3517,7 +3596,7 @@ FROM public."SubCategories";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -4028,7 +4107,7 @@ FROM public."SubCategoryMetrics";</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
-                      name="OpenRowsetVariable"></property>
+                      name="OpenRowsetVariable">User::DestinationSubCategoryMetrics</property>
                     <property
                       dataType="System.String"
                       description="The SQL command to be executed."
@@ -4046,7 +4125,7 @@ FROM public."SubCategoryMetrics";</property>
                       dataType="System.Int32"
                       description="Specifies the mode used to access the database."
                       name="AccessMode"
-                      typeConverter="AccessMode">0</property>
+                      typeConverter="AccessMode">1</property>
                     <property
                       dataType="System.Boolean"
                       description="Indicates whether the values supplied for identity columns will be copied to the destination. If false, values for identity columns will be auto-generated at the destination. Applies only if fast load is turned on."
@@ -4624,6 +4703,14 @@ FROM public."SubCategoryMetrics";</property>
       </GraphLayout>
     </LayoutInfo>
   </TaskHost>
+  <PipelineComponentMetadata
+    design-time-name="Package\Retrieve Tables\OLE DB Source">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
   <TaskHost
     design-time-name="Package\Sequence Container\Copy STAT_CATEGORIES">
     <LayoutInfo>
@@ -5034,14 +5121,6 @@ FROM public."SubCategoryMetrics";</property>
         <Name>TableInfoObjectType</Name>
         <Value
           type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\Retrieve Tables\OLE DB Source">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
       </Property>
     </Properties>
   </PipelineComponentMetadata>

@@ -12,8 +12,8 @@
   DTS:ObjectName="Package"
   DTS:PackageType="5"
   DTS:ProtectionLevel="0"
-  DTS:VersionBuild="135"
-  DTS:VersionGUID="{6B94A9EB-538E-486A-B887-EF350199BB86}">
+  DTS:VersionBuild="136"
+  DTS:VersionGUID="{2FB4BCE7-7F66-44EB-B350-FE563230F428}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -2025,7 +2025,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</BinaryItem>
             SQLTask:ParameterName="UnsafeOracleTargetCount"
             SQLTask:DtsVariableName="User::UnsafeOracleTargetCount"
             SQLTask:ParameterDirection="Input"
-            SQLTask:DataType="-9"
+            SQLTask:DataType="4"
             SQLTask:ParameterSize="-1" />
           <SQLTask:ParameterBinding
             SQLTask:ParameterName="LoadId"
