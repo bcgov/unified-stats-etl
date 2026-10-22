@@ -1881,6 +1881,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</BinaryItem>
       DTS:Description="Execute SQL Task"
       DTS:DTSID="{F3883953-CD25-436D-AC0F-D4DB15A7CA2C}"
       DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:FailPackageOnFailure="True"
       DTS:LocaleID="-1"
       DTS:ObjectName="Log Failure Of ETL Run"
       DTS:ThreadHint="2">
@@ -2803,6 +2804,46 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</BinaryItem>
           </DTS:ObjectData>
         </DTS:Executable>
         <DTS:Executable
+          DTS:refId="Package\Oracle Load Sequence\Reconcile Oracle Stage Count"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Fail before publication when the Oracle stage is incomplete"
+          DTS:DTSID="{BA54CD55-011E-4C39-9550-49F9EF976D06}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:FailPackageOnFailure="True"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Reconcile Oracle Stage Count"
+          DTS:ThreadHint="1">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{42C76F06-CDE1-4A8F-98EC-F69D324120CD}"
+              SQLTask:SqlStatementSource="WITH counts AS&#xA;(&#xA;    SELECT&#xA;        CAST(? AS integer) AS expected_count,&#xA;        CAST(? AS integer) AS actual_count,&#xA;        CAST(? AS uuid) AS load_id&#xA;)&#xA;SELECT&#xA;    CASE&#xA;        WHEN expected_count &gt; 0 AND actual_count = expected_count&#xA;        THEN actual_count&#xA;        ELSE (&#xA;            'Oracle stage reconciliation failed for LoadId '&#xA;            || load_id::text&#xA;            || ': expected '&#xA;            || expected_count::text&#xA;            || ' staged cell(s), actual '&#xA;            || actual_count::text&#xA;            || '.'&#xA;        )::integer&#xA;    END AS oracle_stage_row_count&#xA;FROM counts;"
+              SQLTask:ResultType="ResultSetType_SingleRow" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+              <SQLTask:ResultBinding
+                SQLTask:ResultName="0"
+                SQLTask:DtsVariableName="User::OracleStageRowCount" />
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="1"
+                SQLTask:DtsVariableName="User::StagedCellCount"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="4"
+                SQLTask:ParameterSize="-1" />
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="2"
+                SQLTask:DtsVariableName="User::OracleStageRowCount"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="4"
+                SQLTask:ParameterSize="-1" />
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="3"
+                SQLTask:DtsVariableName="User::LoadId"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="-9"
+                SQLTask:ParameterSize="-1" />
+            </SQLTask:SqlTaskData>
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
           DTS:refId="Package\Oracle Load Sequence\Load Generic Oracle Stage"
           DTS:CreationName="Microsoft.Pipeline"
           DTS:Description="Data Flow Task"
@@ -3338,10 +3379,18 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
           DTS:refId="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 3]"
           DTS:CreationName=""
           DTS:DTSID="{986B0BA9-DC3E-41AA-8486-D34F25A43050}"
-          DTS:From="Package\Oracle Load Sequence\Get Staged Oracle Count"
+          DTS:From="Package\Oracle Load Sequence\Reconcile Oracle Stage Count"
           DTS:LogicalAnd="True"
           DTS:ObjectName="Constraint 3"
           DTS:To="Package\Oracle Load Sequence\Apply Oracle Load" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 5]"
+          DTS:CreationName=""
+          DTS:DTSID="{4666EDDB-69D8-4ED0-93A9-C7494C7D339C}"
+          DTS:From="Package\Oracle Load Sequence\Get Staged Oracle Count"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 5"
+          DTS:To="Package\Oracle Load Sequence\Reconcile Oracle Stage Count" />
         <DTS:PrecedenceConstraint
           DTS:refId="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 4]"
           DTS:CreationName=""
@@ -3385,25 +3434,25 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
               <DTS:ObjectData>
                 <SQLTask:SqlTaskData
                   SQLTask:Connection="{42C76F06-CDE1-4A8F-98EC-F69D324120CD}"
-                  SQLTask:SqlStatementSource="UPDATE etl.&quot;BiOracleEtlRuns&quot;&#xA;SET&#xA;    &quot;CompletedAt&quot; = CURRENT_TIMESTAMP,&#xA;    &quot;Status&quot; = 'Failed',&#xA;    &quot;ErrorMessage&quot; =&#xA;        CONCAT_WS(&#xA;            E'\n',&#xA;            NULLIF(&quot;ErrorMessage&quot;, ''),&#xA;            'Oracle load failure in '&#xA;                || COALESCE(?::text, 'unknown task')&#xA;                || ': '&#xA;                || COALESCE(?::text, 'No error description was provided.')&#xA;        )&#xA;WHERE &quot;LoadId&quot; = ?::uuid;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+                  SQLTask:SqlStatementSource="UPDATE etl.&quot;BiOracleEtlRuns&quot;&#xA;SET&#xA;    &quot;CompletedAt&quot; = CURRENT_TIMESTAMP,&#xA;    &quot;Status&quot; = 'Failed',&#xA;    &quot;ErrorMessage&quot; =&#xA;        CONCAT_WS(&#xA;            E'\n',&#xA;            NULLIF(&quot;ErrorMessage&quot;, ''),&#xA;            'Oracle load failure in '&#xA;                || COALESCE(?::text, 'unknown task')&#xA;                || ': '&#xA;                || COALESCE(?::text, 'No error description was provided.')&#xA;        )&#xA;WHERE &quot;LoadId&quot; = ?::uuid&#xA;  AND &quot;Status&quot; IS DISTINCT FROM 'Failed';" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
                   <SQLTask:ParameterBinding
-                    SQLTask:ParameterName="SourceName"
+                    SQLTask:ParameterName="1"
                     SQLTask:DtsVariableName="System::SourceName"
                     SQLTask:ParameterDirection="Input"
                     SQLTask:DataType="-9"
-                    SQLTask:ParameterSize="1" />
+                    SQLTask:ParameterSize="-1" />
                   <SQLTask:ParameterBinding
-                    SQLTask:ParameterName="ErrorDescription"
+                    SQLTask:ParameterName="2"
                     SQLTask:DtsVariableName="System::ErrorDescription"
                     SQLTask:ParameterDirection="Input"
                     SQLTask:DataType="-9"
-                    SQLTask:ParameterSize="2" />
+                    SQLTask:ParameterSize="-1" />
                   <SQLTask:ParameterBinding
-                    SQLTask:ParameterName="LoadId"
+                    SQLTask:ParameterName="3"
                     SQLTask:DtsVariableName="User::LoadId"
                     SQLTask:ParameterDirection="Input"
                     SQLTask:DataType="-9"
-                    SQLTask:ParameterSize="3" />
+                    SQLTask:ParameterSize="-1" />
                 </SQLTask:SqlTaskData>
               </DTS:ObjectData>
             </DTS:Executable>
@@ -3424,7 +3473,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{42C76F06-CDE1-4A8F-98EC-F69D324120CD}"
-          SQLTask:SqlStatementSource="WITH params AS&#xA;(&#xA;    SELECT&#xA;        CAST(? AS date)    AS reporting_month,&#xA;        CAST(? AS integer) AS mapping_set_id&#xA;),&#xA;&#xA;/*&#xA; * Records whose date range touches the reporting month,&#xA; * regardless of whether DateFrom/DateTo are accidentally reversed.&#xA; *&#xA; * This is used for validations such as invalid date ranges.&#xA; */&#xA;source_candidates AS&#xA;(&#xA;    SELECT sr.*&#xA;    FROM &quot;StatRecords&quot; sr&#xA;    CROSS JOIN params p&#xA;    WHERE sr.&quot;Status&quot; IN ('Submitted', 'SignedOff')&#xA;      AND LEAST(sr.&quot;DateFrom&quot;, sr.&quot;DateTo&quot;)&#xA;            &lt; (p.reporting_month + INTERVAL '1 month')&#xA;      AND GREATEST(sr.&quot;DateFrom&quot;, sr.&quot;DateTo&quot;)&#xA;            &gt;= p.reporting_month&#xA;),&#xA;&#xA;/*&#xA; * Actual source population for this ETL.&#xA; *&#xA; * A record qualifies when:&#xA; *   - Status is Submitted or SignedOff&#xA; *   - Date range is valid&#xA; *   - Any portion of the range overlaps the reporting month&#xA; */&#xA;eligible_source AS&#xA;(&#xA;    SELECT sr.*&#xA;    FROM &quot;StatRecords&quot; sr&#xA;    CROSS JOIN params p&#xA;    WHERE sr.&quot;Status&quot; IN ('Submitted', 'SignedOff')&#xA;      AND sr.&quot;DateFrom&quot; &lt;= sr.&quot;DateTo&quot;&#xA;      AND sr.&quot;DateFrom&quot;&#xA;            &lt; (p.reporting_month + INTERVAL '1 month')&#xA;      AND sr.&quot;DateTo&quot;&#xA;            &gt;= p.reporting_month&#xA;),&#xA;&#xA;/*&#xA; * Join using LEFT JOINs deliberately.&#xA; *&#xA; * The staging query uses INNER JOINs, so these LEFT JOINs let us&#xA; * detect exactly where a source record would otherwise disappear.&#xA; */&#xA;source_joined AS&#xA;(&#xA;    SELECT&#xA;        sr.&quot;Id&quot; AS stat_record_id,&#xA;        sr.&quot;SubCategoryMetricId&quot;,&#xA;        sr.&quot;Value&quot;,&#xA;        sr.&quot;DateFrom&quot;,&#xA;        sr.&quot;DateTo&quot;,&#xA;&#xA;        COALESCE(&#xA;            sr.&quot;PerformedAtLocationId&quot;,&#xA;            sr.&quot;LocationId&quot;&#xA;        ) AS effective_location_id,&#xA;&#xA;        l.&quot;Id&quot; AS joined_location_id,&#xA;        l.&quot;JustinLocationCode&quot;,&#xA;&#xA;        lm.&quot;Id&quot; AS location_mapping_id,&#xA;        lm.&quot;CrtLocId&quot;,&#xA;&#xA;        scm.&quot;Id&quot; AS scm_id,&#xA;        scm.&quot;IsArchived&quot; AS scm_is_archived,&#xA;&#xA;        sc.&quot;Id&quot; AS subcategory_id,&#xA;        sc.&quot;IsArchived&quot; AS subcategory_is_archived,&#xA;&#xA;        cat.&quot;Id&quot; AS category_id,&#xA;        cat.&quot;IsArchived&quot; AS category_is_archived,&#xA;&#xA;        sg.&quot;Id&quot; AS group_id,&#xA;        sg.&quot;Name&quot; AS group_name,&#xA;        sg.&quot;IsLocationLevel&quot;&#xA;&#xA;    FROM eligible_source sr&#xA;    CROSS JOIN params p&#xA;&#xA;    LEFT JOIN &quot;Locations&quot; l&#xA;        ON l.&quot;Id&quot; = COALESCE(&#xA;            sr.&quot;PerformedAtLocationId&quot;,&#xA;            sr.&quot;LocationId&quot;&#xA;        )&#xA;&#xA;    LEFT JOIN etl.&quot;BiOracleLocationMapping&quot; lm&#xA;        ON lm.&quot;JustinLocationCode&quot; = l.&quot;JustinLocationCode&quot;&#xA;       AND lm.&quot;EffectiveDate&quot; &lt;= p.reporting_month&#xA;       AND (&#xA;            lm.&quot;ExpiryDate&quot; IS NULL&#xA;            OR lm.&quot;ExpiryDate&quot; &gt;= p.reporting_month&#xA;       )&#xA;&#xA;    LEFT JOIN &quot;SubCategoryMetrics&quot; scm&#xA;        ON scm.&quot;Id&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;    LEFT JOIN &quot;SubCategories&quot; sc&#xA;        ON sc.&quot;Id&quot; = scm.&quot;SubCategoryId&quot;&#xA;&#xA;    LEFT JOIN &quot;StatCategories&quot; cat&#xA;        ON cat.&quot;Id&quot; = sc.&quot;CategoryId&quot;&#xA;&#xA;    LEFT JOIN &quot;StatGroups&quot; sg&#xA;        ON sg.&quot;Id&quot; = cat.&quot;GroupId&quot;&#xA;),&#xA;&#xA;selected_mappings AS&#xA;(&#xA;    SELECT m.*&#xA;    FROM etl.&quot;BiOracleStatMappings&quot; m&#xA;    CROSS JOIN params p&#xA;    WHERE m.&quot;MappingSetId&quot; = p.mapping_set_id&#xA;),&#xA;&#xA;/*&#xA; * Source records that are sufficiently valid to resolve all the way&#xA; * to a prospective destination cell.&#xA; *&#xA; * DISTINCT keeps the diagnostic for shared Non-Supervision and&#xA; * Location Level destination cells from being inflated by duplicate&#xA; * mapping configuration. Duplicate mappings are validated separately.&#xA; */&#xA;stage_candidates AS&#xA;(&#xA;    SELECT DISTINCT&#xA;        sr.&quot;Id&quot; AS stat_record_id,&#xA;        lm.&quot;CrtLocId&quot;,&#xA;&#xA;        CASE sg.&quot;Name&quot;&#xA;            WHEN 'Supervision'     THEN TRUE&#xA;            WHEN 'Non-Supervision' THEN FALSE&#xA;            WHEN 'Location Level'  THEN FALSE&#xA;            ELSE NULL&#xA;        END AS is_supervisor,&#xA;&#xA;        sg.&quot;Name&quot; AS group_name,&#xA;&#xA;        m.&quot;TargetTable&quot;,&#xA;        m.&quot;TargetColumn&quot;&#xA;&#xA;    FROM eligible_source sr&#xA;    CROSS JOIN params p&#xA;&#xA;    INNER JOIN &quot;Locations&quot; l&#xA;        ON l.&quot;Id&quot; = COALESCE(&#xA;            sr.&quot;PerformedAtLocationId&quot;,&#xA;            sr.&quot;LocationId&quot;&#xA;        )&#xA;&#xA;    INNER JOIN etl.&quot;BiOracleLocationMapping&quot; lm&#xA;        ON lm.&quot;JustinLocationCode&quot; = l.&quot;JustinLocationCode&quot;&#xA;       AND lm.&quot;EffectiveDate&quot; &lt;= p.reporting_month&#xA;       AND (&#xA;            lm.&quot;ExpiryDate&quot; IS NULL&#xA;            OR lm.&quot;ExpiryDate&quot; &gt;= p.reporting_month&#xA;       )&#xA;&#xA;    INNER JOIN &quot;SubCategoryMetrics&quot; scm&#xA;        ON scm.&quot;Id&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;    INNER JOIN &quot;SubCategories&quot; sc&#xA;        ON sc.&quot;Id&quot; = scm.&quot;SubCategoryId&quot;&#xA;&#xA;    INNER JOIN &quot;StatCategories&quot; cat&#xA;        ON cat.&quot;Id&quot; = sc.&quot;CategoryId&quot;&#xA;&#xA;    INNER JOIN &quot;StatGroups&quot; sg&#xA;        ON sg.&quot;Id&quot; = cat.&quot;GroupId&quot;&#xA;&#xA;    INNER JOIN selected_mappings m&#xA;        ON m.&quot;SubCategoryMetricId&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;    WHERE sg.&quot;Name&quot; IN&#xA;    (&#xA;        'Non-Supervision',&#xA;        'Supervision',&#xA;        'Location Level'&#xA;    )&#xA;),&#xA;&#xA;/*&#xA; * Both Non-Supervision and Location Level are intentionally mapped to&#xA; * IsSupervisor = false and summed into the same Oracle destination cell.&#xA; *&#xA; * Keep a diagnostic count of shared cells, but do NOT treat these as&#xA; * validation failures. This preserves the existing SSIS result binding.&#xA; */&#xA;location_level_collisions AS&#xA;(&#xA;    SELECT&#xA;        &quot;CrtLocId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    FROM stage_candidates&#xA;    WHERE is_supervisor = FALSE&#xA;    GROUP BY&#xA;        &quot;CrtLocId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    HAVING&#xA;        BOOL_OR(group_name = 'Non-Supervision')&#xA;        AND&#xA;        BOOL_OR(group_name = 'Location Level')&#xA;),&#xA;&#xA;duplicate_location_mappings AS&#xA;(&#xA;    SELECT&#xA;        lm.&quot;JustinLocationCode&quot;&#xA;    FROM etl.&quot;BiOracleLocationMapping&quot; lm&#xA;    CROSS JOIN params p&#xA;    WHERE lm.&quot;EffectiveDate&quot; &lt;= p.reporting_month&#xA;      AND (&#xA;           lm.&quot;ExpiryDate&quot; IS NULL&#xA;           OR lm.&quot;ExpiryDate&quot; &gt;= p.reporting_month&#xA;      )&#xA;    GROUP BY lm.&quot;JustinLocationCode&quot;&#xA;    HAVING COUNT(*) &gt; 1&#xA;),&#xA;&#xA;duplicate_stat_mappings AS&#xA;(&#xA;    SELECT&#xA;        &quot;MappingSetId&quot;,&#xA;        &quot;SubCategoryMetricId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    FROM etl.&quot;BiOracleStatMappings&quot;&#xA;    CROSS JOIN params p&#xA;    WHERE &quot;MappingSetId&quot; = p.mapping_set_id&#xA;    GROUP BY&#xA;        &quot;MappingSetId&quot;,&#xA;        &quot;SubCategoryMetricId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    HAVING COUNT(*) &gt; 1&#xA;),&#xA;&#xA;validation_counts AS&#xA;(&#xA;    SELECT&#xA;&#xA;        /* Informational */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source&#xA;        ) AS &quot;EligibleSourceRecordCount&quot;,&#xA;&#xA;        /*&#xA;         * Source-data errors&#xA;         */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM source_candidates&#xA;            WHERE &quot;DateFrom&quot; &gt; &quot;DateTo&quot;&#xA;        ) AS &quot;InvalidDateRangeCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source&#xA;            WHERE &quot;Value&quot; IS NULL&#xA;        ) AS &quot;NullValueCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source&#xA;            WHERE &quot;Value&quot; = 'NaN'::numeric&#xA;        ) AS &quot;NaNValueCount&quot;,&#xA;&#xA;        /*&#xA;         * Location errors&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE joined_location_id IS NULL&#xA;        ) AS &quot;MissingLocationCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE joined_location_id IS NOT NULL&#xA;              AND NULLIF(&#xA;                    BTRIM(&quot;JustinLocationCode&quot;::text),&#xA;                    ''&#xA;                  ) IS NULL&#xA;        ) AS &quot;MissingJustinLocationCodeCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE joined_location_id IS NOT NULL&#xA;              AND NULLIF(&#xA;                    BTRIM(&quot;JustinLocationCode&quot;::text),&#xA;                    ''&#xA;                  ) IS NOT NULL&#xA;              AND location_mapping_id IS NULL&#xA;        ) AS &quot;MissingLocationMappingCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM duplicate_location_mappings&#xA;        ) AS &quot;DuplicateLocationMappingCount&quot;,&#xA;&#xA;        /*&#xA;         * Stats hierarchy errors&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE scm_id IS NULL&#xA;        ) AS &quot;MissingSubCategoryMetricCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE scm_id IS NOT NULL&#xA;              AND subcategory_id IS NULL&#xA;        ) AS &quot;MissingSubCategoryCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE subcategory_id IS NOT NULL&#xA;              AND category_id IS NULL&#xA;        ) AS &quot;MissingCategoryCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE category_id IS NOT NULL&#xA;              AND group_id IS NULL&#xA;        ) AS &quot;MissingGroupCount&quot;,&#xA;&#xA;        /*&#xA;         * The ETL only understands these three semantic groups.&#xA;         * No environment-specific StatGroup IDs are used.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE group_id IS NOT NULL&#xA;              AND group_name NOT IN&#xA;              (&#xA;                  'Non-Supervision',&#xA;                  'Supervision',&#xA;                  'Location Level'&#xA;              )&#xA;        ) AS &quot;UnknownGroupCount&quot;,&#xA;&#xA;        /*&#xA;         * Validate the semantic relationship between Name and&#xA;         * IsLocationLevel as well.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE group_id IS NOT NULL&#xA;              AND&#xA;              (&#xA;                  (&#xA;                      group_name = 'Location Level'&#xA;                      AND &quot;IsLocationLevel&quot; IS NOT TRUE&#xA;                  )&#xA;                  OR&#xA;                  (&#xA;                      group_name IN&#xA;                      (&#xA;                          'Non-Supervision',&#xA;                          'Supervision'&#xA;                      )&#xA;                      AND &quot;IsLocationLevel&quot; IS NOT FALSE&#xA;                  )&#xA;              )&#xA;        ) AS &quot;InvalidGroupLocationLevelFlagCount&quot;,&#xA;&#xA;        /*&#xA;         * Mapping errors&#xA;         *&#xA;         * Only count this as &quot;unmapped&quot; when the SCM itself exists,&#xA;         * so a broken SCM FK isn't reported as both errors.&#xA;         */&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source sr&#xA;&#xA;            INNER JOIN &quot;SubCategoryMetrics&quot; scm&#xA;                ON scm.&quot;Id&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;            INNER JOIN &quot;SubCategories&quot; sc&#xA;                ON sc.&quot;Id&quot; = scm.&quot;SubCategoryId&quot;&#xA;&#xA;            INNER JOIN &quot;StatCategories&quot; cat&#xA;                ON cat.&quot;Id&quot; = sc.&quot;CategoryId&quot;&#xA;&#xA;            WHERE sr.&quot;Status&quot; = 'SignedOff'&#xA;            AND COALESCE(scm.&quot;IsArchived&quot;, FALSE) = FALSE&#xA;            AND COALESCE(sc.&quot;IsArchived&quot;, FALSE) = FALSE&#xA;            AND COALESCE(cat.&quot;IsArchived&quot;, FALSE) = FALSE&#xA;&#xA;            AND NOT EXISTS&#xA;            (&#xA;                SELECT 1&#xA;                FROM selected_mappings m&#xA;                WHERE m.&quot;SubCategoryMetricId&quot;&#xA;                    = sr.&quot;SubCategoryMetricId&quot;&#xA;            )&#xA;        ) AS &quot;UnmappedSourceRecordCount&quot;,&#xA;&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM duplicate_stat_mappings&#xA;        ) AS &quot;DuplicateStatMappingCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM selected_mappings&#xA;            WHERE &quot;TargetTable&quot; IS NULL&#xA;               OR &quot;TargetTable&quot; NOT IN&#xA;               (&#xA;                   'SHERIFF_SRVCES',&#xA;                   'SHERIFF_SRVCES_HOURS'&#xA;               )&#xA;        ) AS &quot;InvalidTargetTableCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM selected_mappings&#xA;            WHERE NULLIF(&#xA;                BTRIM(&quot;TargetColumn&quot;),&#xA;                ''&#xA;            ) IS NULL&#xA;        ) AS &quot;BlankTargetColumnCount&quot;,&#xA;&#xA;        /*&#xA;         * Informational only: intentional Location Level and&#xA;         * Non-Supervision contributions to the same Oracle cell.&#xA;         * Retained to preserve existing SSIS output-column bindings.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM location_level_collisions&#xA;        ) AS &quot;LocationLevelCollisionCount&quot;,&#xA;&#xA;        /*&#xA;         * Warning only.&#xA;         *&#xA;         * The chosen business rule intentionally includes these&#xA;         * records in every month their range overlaps.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source sr&#xA;            CROSS JOIN params p&#xA;            WHERE sr.&quot;DateFrom&quot; &lt; p.reporting_month&#xA;               OR sr.&quot;DateTo&quot;&#xA;                    &gt;= (p.reporting_month + INTERVAL '1 month')&#xA;        ) AS &quot;CrossMonthRecordCount&quot;,&#xA;&#xA;        /*&#xA;         * Warning / diagnostic.&#xA;         *&#xA;         * Archived taxonomy doesn't automatically mean historical&#xA;         * data is invalid. Missing mapping is validated separately.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE scm_is_archived IS TRUE&#xA;               OR subcategory_is_archived IS TRUE&#xA;               OR category_is_archived IS TRUE&#xA;        ) AS &quot;ArchivedTaxonomyRecordCount&quot;&#xA;),&#xA;&#xA;final_counts AS&#xA;(&#xA;    SELECT&#xA;        vc.*,&#xA;&#xA;        (&#xA;              vc.&quot;InvalidDateRangeCount&quot;&#xA;            + vc.&quot;NullValueCount&quot;&#xA;            + vc.&quot;NaNValueCount&quot;&#xA;            + vc.&quot;MissingLocationCount&quot;&#xA;            + vc.&quot;MissingJustinLocationCodeCount&quot;&#xA;            + vc.&quot;MissingLocationMappingCount&quot;&#xA;            + vc.&quot;DuplicateLocationMappingCount&quot;&#xA;            + vc.&quot;MissingSubCategoryMetricCount&quot;&#xA;            + vc.&quot;MissingSubCategoryCount&quot;&#xA;            + vc.&quot;MissingCategoryCount&quot;&#xA;            + vc.&quot;MissingGroupCount&quot;&#xA;            + vc.&quot;UnknownGroupCount&quot;&#xA;            + vc.&quot;InvalidGroupLocationLevelFlagCount&quot;&#xA;            + vc.&quot;UnmappedSourceRecordCount&quot;&#xA;            + vc.&quot;DuplicateStatMappingCount&quot;&#xA;            + vc.&quot;InvalidTargetTableCount&quot;&#xA;            + vc.&quot;BlankTargetColumnCount&quot;&#xA;        )::integer AS &quot;FatalValidationCount&quot;&#xA;&#xA;    FROM validation_counts vc&#xA;)&#xA;&#xA;SELECT&#xA;    &quot;EligibleSourceRecordCount&quot;,&#xA;    &quot;InvalidDateRangeCount&quot;,&#xA;    &quot;NullValueCount&quot;,&#xA;    &quot;NaNValueCount&quot;,&#xA;    &quot;MissingLocationCount&quot;,&#xA;    &quot;MissingJustinLocationCodeCount&quot;,&#xA;    &quot;MissingLocationMappingCount&quot;,&#xA;    &quot;DuplicateLocationMappingCount&quot;,&#xA;    &quot;MissingSubCategoryMetricCount&quot;,&#xA;    &quot;MissingSubCategoryCount&quot;,&#xA;    &quot;MissingCategoryCount&quot;,&#xA;    &quot;MissingGroupCount&quot;,&#xA;    &quot;UnknownGroupCount&quot;,&#xA;    &quot;InvalidGroupLocationLevelFlagCount&quot;,&#xA;    &quot;UnmappedSourceRecordCount&quot;,&#xA;    &quot;DuplicateStatMappingCount&quot;,&#xA;    &quot;InvalidTargetTableCount&quot;,&#xA;    &quot;BlankTargetColumnCount&quot;,&#xA;    &quot;LocationLevelCollisionCount&quot;,&#xA;    &quot;CrossMonthRecordCount&quot;,&#xA;    &quot;ArchivedTaxonomyRecordCount&quot;,&#xA;    &quot;FatalValidationCount&quot;&#xA;FROM final_counts;"
+          SQLTask:SqlStatementSource="WITH params AS&#xA;(&#xA;    SELECT&#xA;        CAST(? AS date)    AS reporting_month,&#xA;        CAST(? AS integer) AS mapping_set_id&#xA;),&#xA;&#xA;/*&#xA; * Records whose date range touches the reporting month,&#xA; * regardless of whether DateFrom/DateTo are accidentally reversed.&#xA; *&#xA; * This is used for validations such as invalid date ranges.&#xA; */&#xA;source_candidates AS&#xA;(&#xA;    SELECT sr.*&#xA;    FROM &quot;StatRecords&quot; sr&#xA;    CROSS JOIN params p&#xA;    WHERE sr.&quot;Status&quot; = 'SignedOff'&#xA;      AND LEAST(sr.&quot;DateFrom&quot;, sr.&quot;DateTo&quot;)&#xA;            &lt; (p.reporting_month + INTERVAL '1 month')&#xA;      AND GREATEST(sr.&quot;DateFrom&quot;, sr.&quot;DateTo&quot;)&#xA;            &gt;= p.reporting_month&#xA;),&#xA;&#xA;/*&#xA; * Actual source population for this ETL.&#xA; *&#xA; * A record qualifies when:&#xA; *   - Status is SignedOff&#xA; *   - Date range is valid&#xA; *   - Any portion of the range overlaps the reporting month&#xA; */&#xA;eligible_source AS&#xA;(&#xA;    SELECT sr.*&#xA;    FROM &quot;StatRecords&quot; sr&#xA;    CROSS JOIN params p&#xA;    WHERE sr.&quot;Status&quot; = 'SignedOff'&#xA;      AND sr.&quot;DateFrom&quot; &lt;= sr.&quot;DateTo&quot;&#xA;      AND sr.&quot;DateFrom&quot;&#xA;            &lt; (p.reporting_month + INTERVAL '1 month')&#xA;      AND sr.&quot;DateTo&quot;&#xA;            &gt;= p.reporting_month&#xA;),&#xA;&#xA;/*&#xA; * Join using LEFT JOINs deliberately.&#xA; *&#xA; * The staging query uses INNER JOINs, so these LEFT JOINs let us&#xA; * detect exactly where a source record would otherwise disappear.&#xA; */&#xA;source_joined AS&#xA;(&#xA;    SELECT&#xA;        sr.&quot;Id&quot; AS stat_record_id,&#xA;        sr.&quot;SubCategoryMetricId&quot;,&#xA;        sr.&quot;Value&quot;,&#xA;        sr.&quot;DateFrom&quot;,&#xA;        sr.&quot;DateTo&quot;,&#xA;&#xA;        COALESCE(&#xA;            sr.&quot;PerformedAtLocationId&quot;,&#xA;            sr.&quot;LocationId&quot;&#xA;        ) AS effective_location_id,&#xA;&#xA;        l.&quot;Id&quot; AS joined_location_id,&#xA;        l.&quot;JustinLocationCode&quot;,&#xA;&#xA;        lm.&quot;Id&quot; AS location_mapping_id,&#xA;        lm.&quot;CrtLocId&quot;,&#xA;&#xA;        scm.&quot;Id&quot; AS scm_id,&#xA;        scm.&quot;IsArchived&quot; AS scm_is_archived,&#xA;&#xA;        sc.&quot;Id&quot; AS subcategory_id,&#xA;        sc.&quot;IsArchived&quot; AS subcategory_is_archived,&#xA;&#xA;        cat.&quot;Id&quot; AS category_id,&#xA;        cat.&quot;IsArchived&quot; AS category_is_archived,&#xA;&#xA;        sg.&quot;Id&quot; AS group_id,&#xA;        sg.&quot;Name&quot; AS group_name,&#xA;        sg.&quot;IsLocationLevel&quot;&#xA;&#xA;    FROM eligible_source sr&#xA;    CROSS JOIN params p&#xA;&#xA;    LEFT JOIN &quot;Locations&quot; l&#xA;        ON l.&quot;Id&quot; = COALESCE(&#xA;            sr.&quot;PerformedAtLocationId&quot;,&#xA;            sr.&quot;LocationId&quot;&#xA;        )&#xA;&#xA;    LEFT JOIN etl.&quot;BiOracleLocationMapping&quot; lm&#xA;        ON lm.&quot;JustinLocationCode&quot; = l.&quot;JustinLocationCode&quot;&#xA;       AND lm.&quot;EffectiveDate&quot; &lt;= p.reporting_month&#xA;       AND (&#xA;            lm.&quot;ExpiryDate&quot; IS NULL&#xA;            OR lm.&quot;ExpiryDate&quot; &gt;= p.reporting_month&#xA;       )&#xA;&#xA;    LEFT JOIN &quot;SubCategoryMetrics&quot; scm&#xA;        ON scm.&quot;Id&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;    LEFT JOIN &quot;SubCategories&quot; sc&#xA;        ON sc.&quot;Id&quot; = scm.&quot;SubCategoryId&quot;&#xA;&#xA;    LEFT JOIN &quot;StatCategories&quot; cat&#xA;        ON cat.&quot;Id&quot; = sc.&quot;CategoryId&quot;&#xA;&#xA;    LEFT JOIN &quot;StatGroups&quot; sg&#xA;        ON sg.&quot;Id&quot; = cat.&quot;GroupId&quot;&#xA;),&#xA;&#xA;selected_mappings AS&#xA;(&#xA;    SELECT m.*&#xA;    FROM etl.&quot;BiOracleStatMappings&quot; m&#xA;    CROSS JOIN params p&#xA;    WHERE m.&quot;MappingSetId&quot; = p.mapping_set_id&#xA;),&#xA;&#xA;/*&#xA; * Source records that are sufficiently valid to resolve all the way&#xA; * to a prospective destination cell.&#xA; *&#xA; * DISTINCT keeps the diagnostic for shared Non-Supervision and&#xA; * Location Level destination cells from being inflated by duplicate&#xA; * mapping configuration. Duplicate mappings are validated separately.&#xA; */&#xA;stage_candidates AS&#xA;(&#xA;    SELECT DISTINCT&#xA;        sr.&quot;Id&quot; AS stat_record_id,&#xA;        lm.&quot;CrtLocId&quot;,&#xA;&#xA;        CASE sg.&quot;Name&quot;&#xA;            WHEN 'Supervision'     THEN TRUE&#xA;            WHEN 'Non-Supervision' THEN FALSE&#xA;            WHEN 'Location Level'  THEN FALSE&#xA;            ELSE NULL&#xA;        END AS is_supervisor,&#xA;&#xA;        sg.&quot;Name&quot; AS group_name,&#xA;&#xA;        m.&quot;TargetTable&quot;,&#xA;        m.&quot;TargetColumn&quot;&#xA;&#xA;    FROM eligible_source sr&#xA;    CROSS JOIN params p&#xA;&#xA;    INNER JOIN &quot;Locations&quot; l&#xA;        ON l.&quot;Id&quot; = COALESCE(&#xA;            sr.&quot;PerformedAtLocationId&quot;,&#xA;            sr.&quot;LocationId&quot;&#xA;        )&#xA;&#xA;    INNER JOIN etl.&quot;BiOracleLocationMapping&quot; lm&#xA;        ON lm.&quot;JustinLocationCode&quot; = l.&quot;JustinLocationCode&quot;&#xA;       AND lm.&quot;EffectiveDate&quot; &lt;= p.reporting_month&#xA;       AND (&#xA;            lm.&quot;ExpiryDate&quot; IS NULL&#xA;            OR lm.&quot;ExpiryDate&quot; &gt;= p.reporting_month&#xA;       )&#xA;&#xA;    INNER JOIN &quot;SubCategoryMetrics&quot; scm&#xA;        ON scm.&quot;Id&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;    INNER JOIN &quot;SubCategories&quot; sc&#xA;        ON sc.&quot;Id&quot; = scm.&quot;SubCategoryId&quot;&#xA;&#xA;    INNER JOIN &quot;StatCategories&quot; cat&#xA;        ON cat.&quot;Id&quot; = sc.&quot;CategoryId&quot;&#xA;&#xA;    INNER JOIN &quot;StatGroups&quot; sg&#xA;        ON sg.&quot;Id&quot; = cat.&quot;GroupId&quot;&#xA;&#xA;    INNER JOIN selected_mappings m&#xA;        ON m.&quot;SubCategoryMetricId&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;    WHERE sg.&quot;Name&quot; IN&#xA;    (&#xA;        'Non-Supervision',&#xA;        'Supervision',&#xA;        'Location Level'&#xA;    )&#xA;),&#xA;&#xA;/*&#xA; * Both Non-Supervision and Location Level are intentionally mapped to&#xA; * IsSupervisor = false and summed into the same Oracle destination cell.&#xA; *&#xA; * Keep a diagnostic count of shared cells, but do NOT treat these as&#xA; * validation failures. This preserves the existing SSIS result binding.&#xA; */&#xA;location_level_collisions AS&#xA;(&#xA;    SELECT&#xA;        &quot;CrtLocId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    FROM stage_candidates&#xA;    WHERE is_supervisor = FALSE&#xA;    GROUP BY&#xA;        &quot;CrtLocId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    HAVING&#xA;        BOOL_OR(group_name = 'Non-Supervision')&#xA;        AND&#xA;        BOOL_OR(group_name = 'Location Level')&#xA;),&#xA;&#xA;duplicate_location_mappings AS&#xA;(&#xA;    SELECT&#xA;        lm.&quot;JustinLocationCode&quot;&#xA;    FROM etl.&quot;BiOracleLocationMapping&quot; lm&#xA;    CROSS JOIN params p&#xA;    WHERE lm.&quot;EffectiveDate&quot; &lt;= p.reporting_month&#xA;      AND (&#xA;           lm.&quot;ExpiryDate&quot; IS NULL&#xA;           OR lm.&quot;ExpiryDate&quot; &gt;= p.reporting_month&#xA;      )&#xA;    GROUP BY lm.&quot;JustinLocationCode&quot;&#xA;    HAVING COUNT(*) &gt; 1&#xA;),&#xA;&#xA;duplicate_stat_mappings AS&#xA;(&#xA;    SELECT&#xA;        &quot;MappingSetId&quot;,&#xA;        &quot;SubCategoryMetricId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    FROM etl.&quot;BiOracleStatMappings&quot;&#xA;    CROSS JOIN params p&#xA;    WHERE &quot;MappingSetId&quot; = p.mapping_set_id&#xA;    GROUP BY&#xA;        &quot;MappingSetId&quot;,&#xA;        &quot;SubCategoryMetricId&quot;,&#xA;        &quot;TargetTable&quot;,&#xA;        &quot;TargetColumn&quot;&#xA;    HAVING COUNT(*) &gt; 1&#xA;),&#xA;&#xA;validation_counts AS&#xA;(&#xA;    SELECT&#xA;&#xA;        /* Informational */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source&#xA;        ) AS &quot;EligibleSourceRecordCount&quot;,&#xA;&#xA;        /*&#xA;         * Source-data errors&#xA;         */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM source_candidates&#xA;            WHERE &quot;DateFrom&quot; &gt; &quot;DateTo&quot;&#xA;        ) AS &quot;InvalidDateRangeCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source&#xA;            WHERE &quot;Value&quot; IS NULL&#xA;        ) AS &quot;NullValueCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source&#xA;            WHERE &quot;Value&quot; = 'NaN'::numeric&#xA;        ) AS &quot;NaNValueCount&quot;,&#xA;&#xA;        /*&#xA;         * Location errors&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE joined_location_id IS NULL&#xA;        ) AS &quot;MissingLocationCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE joined_location_id IS NOT NULL&#xA;              AND NULLIF(&#xA;                    BTRIM(&quot;JustinLocationCode&quot;::text),&#xA;                    ''&#xA;                  ) IS NULL&#xA;        ) AS &quot;MissingJustinLocationCodeCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE joined_location_id IS NOT NULL&#xA;              AND NULLIF(&#xA;                    BTRIM(&quot;JustinLocationCode&quot;::text),&#xA;                    ''&#xA;                  ) IS NOT NULL&#xA;              AND location_mapping_id IS NULL&#xA;        ) AS &quot;MissingLocationMappingCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM duplicate_location_mappings&#xA;        ) AS &quot;DuplicateLocationMappingCount&quot;,&#xA;&#xA;        /*&#xA;         * Stats hierarchy errors&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE scm_id IS NULL&#xA;        ) AS &quot;MissingSubCategoryMetricCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE scm_id IS NOT NULL&#xA;              AND subcategory_id IS NULL&#xA;        ) AS &quot;MissingSubCategoryCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE subcategory_id IS NOT NULL&#xA;              AND category_id IS NULL&#xA;        ) AS &quot;MissingCategoryCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE category_id IS NOT NULL&#xA;              AND group_id IS NULL&#xA;        ) AS &quot;MissingGroupCount&quot;,&#xA;&#xA;        /*&#xA;         * The ETL only understands these three semantic groups.&#xA;         * No environment-specific StatGroup IDs are used.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE group_id IS NOT NULL&#xA;              AND group_name NOT IN&#xA;              (&#xA;                  'Non-Supervision',&#xA;                  'Supervision',&#xA;                  'Location Level'&#xA;              )&#xA;        ) AS &quot;UnknownGroupCount&quot;,&#xA;&#xA;        /*&#xA;         * Validate the semantic relationship between Name and&#xA;         * IsLocationLevel as well.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE group_id IS NOT NULL&#xA;              AND&#xA;              (&#xA;                  (&#xA;                      group_name = 'Location Level'&#xA;                      AND &quot;IsLocationLevel&quot; IS NOT TRUE&#xA;                  )&#xA;                  OR&#xA;                  (&#xA;                      group_name IN&#xA;                      (&#xA;                          'Non-Supervision',&#xA;                          'Supervision'&#xA;                      )&#xA;                      AND &quot;IsLocationLevel&quot; IS NOT FALSE&#xA;                  )&#xA;              )&#xA;        ) AS &quot;InvalidGroupLocationLevelFlagCount&quot;,&#xA;&#xA;        /*&#xA;         * Mapping errors&#xA;         *&#xA;         * Only count this as &quot;unmapped&quot; when the SCM itself exists,&#xA;         * so a broken SCM FK isn't reported as both errors.&#xA;         */&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source sr&#xA;&#xA;            INNER JOIN &quot;SubCategoryMetrics&quot; scm&#xA;                ON scm.&quot;Id&quot; = sr.&quot;SubCategoryMetricId&quot;&#xA;&#xA;            INNER JOIN &quot;SubCategories&quot; sc&#xA;                ON sc.&quot;Id&quot; = scm.&quot;SubCategoryId&quot;&#xA;&#xA;            INNER JOIN &quot;StatCategories&quot; cat&#xA;                ON cat.&quot;Id&quot; = sc.&quot;CategoryId&quot;&#xA;&#xA;            WHERE sr.&quot;Status&quot; = 'SignedOff'&#xA;            AND COALESCE(scm.&quot;IsArchived&quot;, FALSE) = FALSE&#xA;            AND COALESCE(sc.&quot;IsArchived&quot;, FALSE) = FALSE&#xA;            AND COALESCE(cat.&quot;IsArchived&quot;, FALSE) = FALSE&#xA;&#xA;            AND NOT EXISTS&#xA;            (&#xA;                SELECT 1&#xA;                FROM selected_mappings m&#xA;                WHERE m.&quot;SubCategoryMetricId&quot;&#xA;                    = sr.&quot;SubCategoryMetricId&quot;&#xA;            )&#xA;        ) AS &quot;UnmappedSourceRecordCount&quot;,&#xA;&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM duplicate_stat_mappings&#xA;        ) AS &quot;DuplicateStatMappingCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM selected_mappings&#xA;            WHERE &quot;TargetTable&quot; IS NULL&#xA;               OR &quot;TargetTable&quot; NOT IN&#xA;               (&#xA;                   'SHERIFF_SRVCES',&#xA;                   'SHERIFF_SRVCES_HOURS'&#xA;               )&#xA;        ) AS &quot;InvalidTargetTableCount&quot;,&#xA;&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM selected_mappings&#xA;            WHERE NULLIF(&#xA;                BTRIM(&quot;TargetColumn&quot;),&#xA;                ''&#xA;            ) IS NULL&#xA;        ) AS &quot;BlankTargetColumnCount&quot;,&#xA;&#xA;        /*&#xA;         * Informational only: intentional Location Level and&#xA;         * Non-Supervision contributions to the same Oracle cell.&#xA;         * Retained to preserve existing SSIS output-column bindings.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM location_level_collisions&#xA;        ) AS &quot;LocationLevelCollisionCount&quot;,&#xA;&#xA;        /*&#xA;         * Warning only.&#xA;         *&#xA;         * The chosen business rule intentionally includes these&#xA;         * records in every month their range overlaps.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(*)::integer&#xA;            FROM eligible_source sr&#xA;            CROSS JOIN params p&#xA;            WHERE sr.&quot;DateFrom&quot; &lt; p.reporting_month&#xA;               OR sr.&quot;DateTo&quot;&#xA;                    &gt;= (p.reporting_month + INTERVAL '1 month')&#xA;        ) AS &quot;CrossMonthRecordCount&quot;,&#xA;&#xA;        /*&#xA;         * Warning / diagnostic.&#xA;         *&#xA;         * Archived taxonomy doesn't automatically mean historical&#xA;         * data is invalid. Missing mapping is validated separately.&#xA;         */&#xA;        (&#xA;            SELECT COUNT(DISTINCT stat_record_id)::integer&#xA;            FROM source_joined&#xA;            WHERE scm_is_archived IS TRUE&#xA;               OR subcategory_is_archived IS TRUE&#xA;               OR category_is_archived IS TRUE&#xA;        ) AS &quot;ArchivedTaxonomyRecordCount&quot;&#xA;),&#xA;&#xA;final_counts AS&#xA;(&#xA;    SELECT&#xA;        vc.*,&#xA;&#xA;        (&#xA;              vc.&quot;InvalidDateRangeCount&quot;&#xA;            + vc.&quot;NullValueCount&quot;&#xA;            + vc.&quot;NaNValueCount&quot;&#xA;            + vc.&quot;MissingLocationCount&quot;&#xA;            + vc.&quot;MissingJustinLocationCodeCount&quot;&#xA;            + vc.&quot;MissingLocationMappingCount&quot;&#xA;            + vc.&quot;DuplicateLocationMappingCount&quot;&#xA;            + vc.&quot;MissingSubCategoryMetricCount&quot;&#xA;            + vc.&quot;MissingSubCategoryCount&quot;&#xA;            + vc.&quot;MissingCategoryCount&quot;&#xA;            + vc.&quot;MissingGroupCount&quot;&#xA;            + vc.&quot;UnknownGroupCount&quot;&#xA;            + vc.&quot;InvalidGroupLocationLevelFlagCount&quot;&#xA;            + vc.&quot;UnmappedSourceRecordCount&quot;&#xA;            + vc.&quot;DuplicateStatMappingCount&quot;&#xA;            + vc.&quot;InvalidTargetTableCount&quot;&#xA;            + vc.&quot;BlankTargetColumnCount&quot;&#xA;        )::integer AS &quot;FatalValidationCount&quot;&#xA;&#xA;    FROM validation_counts vc&#xA;)&#xA;&#xA;SELECT&#xA;    &quot;EligibleSourceRecordCount&quot;,&#xA;    &quot;InvalidDateRangeCount&quot;,&#xA;    &quot;NullValueCount&quot;,&#xA;    &quot;NaNValueCount&quot;,&#xA;    &quot;MissingLocationCount&quot;,&#xA;    &quot;MissingJustinLocationCodeCount&quot;,&#xA;    &quot;MissingLocationMappingCount&quot;,&#xA;    &quot;DuplicateLocationMappingCount&quot;,&#xA;    &quot;MissingSubCategoryMetricCount&quot;,&#xA;    &quot;MissingSubCategoryCount&quot;,&#xA;    &quot;MissingCategoryCount&quot;,&#xA;    &quot;MissingGroupCount&quot;,&#xA;    &quot;UnknownGroupCount&quot;,&#xA;    &quot;InvalidGroupLocationLevelFlagCount&quot;,&#xA;    &quot;UnmappedSourceRecordCount&quot;,&#xA;    &quot;DuplicateStatMappingCount&quot;,&#xA;    &quot;InvalidTargetTableCount&quot;,&#xA;    &quot;BlankTargetColumnCount&quot;,&#xA;    &quot;LocationLevelCollisionCount&quot;,&#xA;    &quot;CrossMonthRecordCount&quot;,&#xA;    &quot;ArchivedTaxonomyRecordCount&quot;,&#xA;    &quot;FatalValidationCount&quot;&#xA;FROM final_counts;"
           SQLTask:ResultType="ResultSetType_SingleRow" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
           <SQLTask:ResultBinding
             SQLTask:ResultName="0"
@@ -3585,8 +3634,9 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       DTS:CreationName=""
       DTS:DTSID="{58730DB9-04FE-4E90-A45B-22E18B1BAE4B}"
       DTS:From="Package\Validate Incoming Stats"
+      DTS:LogicalAnd="False"
       DTS:ObjectName="Constraint 15"
-      DTS:To="Package\Fail ETL"
+      DTS:To="Package\Log Failure Of ETL Run"
       DTS:Value="1" />
     <DTS:PrecedenceConstraint
       DTS:refId="Package.PrecedenceConstraints[Constraint 16]"
@@ -3595,6 +3645,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       DTS:EvalOp="3"
       DTS:Expression="@[User::UnsafeOracleTargetCount] != 0"
       DTS:From="Package\Confirm Oracle Target Safety"
+      DTS:LogicalAnd="False"
       DTS:ObjectName="Constraint 16"
       DTS:To="Package\Log Failure Of ETL Run"
       DTS:Value="2" />
@@ -3603,6 +3654,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       DTS:CreationName=""
       DTS:DTSID="{88826526-ED8B-42E1-9932-A64F58507BB4}"
       DTS:From="Package\Write Staged Cell Count"
+      DTS:LogicalAnd="False"
       DTS:ObjectName="Constraint 17"
       DTS:To="Package\Log Failure Of ETL Run"
       DTS:Value="1" />
@@ -3611,6 +3663,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       DTS:CreationName=""
       DTS:DTSID="{AC048E2C-3F05-43D1-A64F-BF62D7B98B56}"
       DTS:From="Package\Get Staged Cell Count"
+      DTS:LogicalAnd="False"
       DTS:ObjectName="Constraint 18"
       DTS:To="Package\Log Failure Of ETL Run"
       DTS:Value="1" />
@@ -3619,6 +3672,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       DTS:CreationName=""
       DTS:DTSID="{18A32F7A-797A-4B71-9C57-02EBD3B5970A}"
       DTS:From="Package\Insert STATS Into Staging Table"
+      DTS:LogicalAnd="False"
       DTS:ObjectName="Constraint 19"
       DTS:To="Package\Log Failure Of ETL Run"
       DTS:Value="1" />
@@ -3677,6 +3731,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
       DTS:EvalOp="1"
       DTS:Expression="@[User::FatalValidationCount] &gt; 0"
       DTS:From="Package\Validate Incoming Stats"
+      DTS:LogicalAnd="False"
       DTS:ObjectName="Constraint 6"
       DTS:To="Package\Log Failure Of ETL Run" />
     <DTS:PrecedenceConstraint
@@ -3763,7 +3818,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         <NodeLayout
           Size="169,42"
           Id="Package\Oracle Load Sequence\Apply Oracle Load"
-          TopLeft="27,311.5" />
+          TopLeft="27,413.5" />
         <NodeLayout
           Size="179,42"
           Id="Package\Oracle Load Sequence\Create Oracle Stage"
@@ -3771,11 +3826,15 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         <NodeLayout
           Size="191,42"
           Id="Package\Oracle Load Sequence\Get Loaded Cell Count"
-          TopLeft="16.0000000000001,413.5" />
+          TopLeft="16.0000000000001,515.5" />
         <NodeLayout
           Size="202,42"
           Id="Package\Oracle Load Sequence\Get Staged Oracle Count"
           TopLeft="10.5,209.5" />
+        <NodeLayout
+          Size="200,42"
+          Id="Package\Oracle Load Sequence\Reconcile Oracle Stage Count"
+          TopLeft="11.5,311.5" />
         <NodeLayout
           Size="212,42"
           Id="Package\Oracle Load Sequence\Load Generic Oracle Stage"
@@ -3783,7 +3842,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         <NodeLayout
           Size="186,42"
           Id="Package\Oracle Load Sequence\Update Loaded Count"
-          TopLeft="18.5000000000001,515.5" />
+          TopLeft="18.5000000000001,617.5" />
         <EdgeLayout
           Id="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint]"
           TopLeft="111.5,47.5">
@@ -3830,7 +3889,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         </EdgeLayout>
         <EdgeLayout
           Id="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 2]"
-          TopLeft="111.5,353.5">
+          TopLeft="111.5,455.5">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
@@ -3852,6 +3911,28 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         </EdgeLayout>
         <EdgeLayout
           Id="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 3]"
+          TopLeft="111.5,353.5">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,60"
+              Start="0,0"
+              End="0,52.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,52.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 5]"
           TopLeft="111.5,251.5">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -3874,7 +3955,7 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         </EdgeLayout>
         <EdgeLayout
           Id="Package\Oracle Load Sequence.PrecedenceConstraints[Constraint 4]"
-          TopLeft="111.5,455.5">
+          TopLeft="111.5,557.5">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
@@ -3897,8 +3978,8 @@ LEN(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPL
         <ContainerLayout
           HeaderHeight="43"
           IsExpanded="True"
-          PanelSize="223,613"
-          Size="223,656"
+          PanelSize="223,715"
+          Size="223,758"
           Id="Package\Oracle Load Sequence"
           TopLeft="605,1025.5" />
         <NodeLayout
