@@ -12,8 +12,8 @@
   DTS:ObjectName="BCSS Stats Replicate"
   DTS:PackageType="5"
   DTS:ProtectionLevel="0"
-  DTS:VersionBuild="81"
-  DTS:VersionGUID="{A63AFE4D-D262-4347-BC7E-ED842A29A328}">
+  DTS:VersionBuild="83"
+  DTS:VersionGUID="{F5AE0316-9A1B-4DD7-90C9-F5B448D190BD}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -65,6 +65,94 @@
   <DTS:Variables>
     <DTS:Variable
       DTS:CreationName=""
+      DTS:DTSID="{5DE7562F-DD9E-4B46-8EE8-2E1FBA5EDCC6}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_CATEGORIES\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatCategories">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."STAT_CATEGORIES"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{168BE5BF-AAEF-4E31-97DC-57462648C3E4}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_GROUPS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatGroups">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."STAT_GROUPS"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{596291C5-27B0-4A4B-A79F-7588D0722C7E}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_METRICS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatMetrics">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."STAT_METRICS"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{10BED314-78BA-49D6-B5CB-859BEF72EC6B}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_RECORDS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatRecords">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."STAT_RECORDS"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{67010968-8C90-4CBE-85DF-AB0ABEB476E4}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_SIGNOFFS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationStatSignoffs">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."STAT_SIGNOFFS"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{BAE47C16-2247-41F2-AD56-095ECBDD608F}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;SUB_CATEGORIES\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationSubCategories">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."SUB_CATEGORIES"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{ABCD2BB8-3320-4621-B401-DE80DD1A27A8}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;SUB_CATEGORY_METRICS\&quot;&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="DestinationSubCategoryMetrics">
+      <DTS:VariableValue
+        DTS:DataType="8">"ETL_TARGET"."SUB_CATEGORY_METRICS"</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{5F4D27D6-57DF-4ABD-804B-22169B3D354F}"
+      DTS:EvaluateAsExpression="True"
+      DTS:Expression="&quot;SELECT table_name FROM all_tables WHERE owner = '&quot; + @[User::TargetSchema] + &quot;' AND (UPPER(table_name) LIKE 'STAT%' OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')) ORDER BY table_name&quot;"
+      DTS:IncludeInDebugDump="2345"
+      DTS:Namespace="User"
+      DTS:ObjectName="RetrieveTablesSql">
+      <DTS:VariableValue
+        DTS:DataType="8">SELECT table_name FROM all_tables WHERE owner = 'ETL_TARGET' AND (UPPER(table_name) LIKE 'STAT%' OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')) ORDER BY table_name</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
       DTS:DTSID="{F422B624-C904-4C96-AB9F-12B81AF70B72}"
       DTS:IncludeInDebugDump="2345"
       DTS:Namespace="User"
@@ -101,94 +189,6 @@
       DTS:ObjectName="TargetSchema">
       <DTS:VariableValue
         DTS:DataType="8">ETL_TARGET</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{5F4D27D6-57DF-4ABD-804B-22169B3D354F}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;SELECT table_name FROM all_tables WHERE owner = '&quot; + @[User::TargetSchema] + &quot;' AND (UPPER(table_name) LIKE 'STAT%' OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')) ORDER BY table_name&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="RetrieveTablesSql">
-      <DTS:VariableValue
-        DTS:DataType="8">SELECT table_name FROM all_tables WHERE owner = 'ETL_TARGET' AND (UPPER(table_name) LIKE 'STAT%' OR UPPER(table_name) IN ('SUB_CATEGORIES', 'SUB_CATEGORY_METRICS')) ORDER BY table_name</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{168BE5BF-AAEF-4E31-97DC-57462648C3E4}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_GROUPS\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationStatGroups">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_GROUPS&quot;</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{596291C5-27B0-4A4B-A79F-7588D0722C7E}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_METRICS\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationStatMetrics">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_METRICS&quot;</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{5DE7562F-DD9E-4B46-8EE8-2E1FBA5EDCC6}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_CATEGORIES\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationStatCategories">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_CATEGORIES&quot;</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{BAE47C16-2247-41F2-AD56-095ECBDD608F}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;SUB_CATEGORIES\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationSubCategories">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;SUB_CATEGORIES&quot;</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{ABCD2BB8-3320-4621-B401-DE80DD1A27A8}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;SUB_CATEGORY_METRICS\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationSubCategoryMetrics">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;SUB_CATEGORY_METRICS&quot;</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{10BED314-78BA-49D6-B5CB-859BEF72EC6B}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_RECORDS\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationStatRecords">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_RECORDS&quot;</DTS:VariableValue>
-    </DTS:Variable>
-    <DTS:Variable
-      DTS:CreationName=""
-      DTS:DTSID="{67010968-8C90-4CBE-85DF-AB0ABEB476E4}"
-      DTS:EvaluateAsExpression="True"
-      DTS:Expression="&quot;\&quot;&quot; + @[User::TargetSchema] + &quot;\&quot;.\&quot;STAT_SIGNOFFS\&quot;&quot;"
-      DTS:IncludeInDebugDump="2345"
-      DTS:Namespace="User"
-      DTS:ObjectName="DestinationStatSignoffs">
-      <DTS:VariableValue
-        DTS:DataType="8">&quot;ETL_TARGET&quot;.&quot;STAT_SIGNOFFS&quot;</DTS:VariableValue>
     </DTS:Variable>
   </DTS:Variables>
   <DTS:Executables>
@@ -272,8 +272,18 @@
             <SQLTask:SqlTaskData
               SQLTask:Connection="{762C991A-B507-40E2-AAAE-F6262F4D019C}"
               SQLTask:SqlStatementSource="DECLARE&#xA;    v_schema VARCHAR2(128) := ?;&#xA;    v_table VARCHAR2(128) := ?;&#xA;BEGIN&#xA;    IF v_schema IS NULL OR NOT REGEXP_LIKE(v_schema, '^[A-Z][A-Z0-9_$#]{0,127}$', 'c') THEN&#xA;        RAISE_APPLICATION_ERROR(-20001, 'Invalid Oracle target schema identifier');&#xA;    END IF;&#xA;    IF v_table IS NULL OR NOT REGEXP_LIKE(v_table, '^[A-Z][A-Z0-9_$#]{0,127}$', 'c') THEN&#xA;        RAISE_APPLICATION_ERROR(-20003, 'Unsafe Oracle replication table identifier');&#xA;    END IF;&#xA;    EXECUTE IMMEDIATE 'TRUNCATE TABLE &quot;' || v_schema || '&quot;.&quot;' || v_table || '&quot;';&#xA;END;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
-              <SQLTask:ParameterBinding SQLTask:ParameterName="0" SQLTask:DtsVariableName="User::TargetSchema" SQLTask:ParameterDirection="Input" SQLTask:DataType="129" SQLTask:ParameterSize="0" />
-              <SQLTask:ParameterBinding SQLTask:ParameterName="1" SQLTask:DtsVariableName="User::TableName" SQLTask:ParameterDirection="Input" SQLTask:DataType="129" SQLTask:ParameterSize="0" />
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="0"
+                SQLTask:DtsVariableName="User::TargetSchema"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="129"
+                SQLTask:ParameterSize="0" />
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="1"
+                SQLTask:DtsVariableName="User::TableName"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="129"
+                SQLTask:ParameterSize="0" />
             </SQLTask:SqlTaskData>
           </DTS:ObjectData>
         </DTS:Executable>
@@ -4669,7 +4679,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Retrieve Tables">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="187,42"
           Id="Package\Retrieve Tables\Recordset Destination"
@@ -4697,7 +4707,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4715,7 +4727,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_CATEGORIES">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_CATEGORIES\ODBC Source"
@@ -4743,7 +4755,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4774,7 +4788,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_GROUPS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_GROUPS\ODBC Source"
@@ -4802,7 +4816,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4833,7 +4849,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_METRICS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_METRICS\ODBC Source"
@@ -4861,7 +4877,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4892,7 +4910,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_RECORDS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_RECORDS\ODBC Source"
@@ -4920,7 +4938,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -4951,7 +4971,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy STAT_SIGNOFFS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy STAT_SIGNOFFS\ODBC Source"
@@ -4979,7 +4999,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -5010,7 +5032,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy SUB_CATEGORY_METRICS">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="149,42"
           Id="Package\Sequence Container\Copy SUB_CATEGORY_METRICS\ODBC Source"
@@ -5038,7 +5060,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -5069,7 +5093,7 @@ FROM public."SubCategoryMetrics";</property>
     design-time-name="Package\Sequence Container\Copy SUBCATEGORIES">
     <LayoutInfo>
       <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
           Size="177,42"
           Id="Package\Sequence Container\Copy SUBCATEGORIES\OLE DB Destination"
@@ -5097,7 +5121,9 @@ FROM public."SubCategoryMetrics";</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="0,0,0,0"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
