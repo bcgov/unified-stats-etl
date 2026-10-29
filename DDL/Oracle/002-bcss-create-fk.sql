@@ -4,6 +4,10 @@
 -- No FKs to Users/Locations since those are not replicated.
 -- ============================================================================
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CURRENT_SCHEMA = ETL_TARGET;
+
 -- StatCategories -> StatGroups
 ALTER TABLE STAT_CATEGORIES
     ADD CONSTRAINT FK_STAT_CAT_GROUP

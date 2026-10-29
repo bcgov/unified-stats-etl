@@ -1,0 +1,57 @@
+name: Validate SSIS Security
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-ssis-protection:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate SSIS ProtectionLevel
+        shell: pwsh
+        run: |
+          $errors = @()
+
+          $files = Get-ChildItem -Path . -Recurse -File |
+            Where-Object { $_.Extension -in '.dtsx', '.dtproj' }
+
+          foreach ($file in $files) {
+              $content = Get-Content $file.FullName -Raw
+
+              # Find XML attributes such as:
+              # DTS:ProtectionLevel="DontSaveSensitive"
+              # SSIS:ProtectionLevel="DontSaveSensitive"
+              $matches = [regex]::Matches(
+                  $content,
+                  '(?:\w+:)?ProtectionLevel\s*=\s*"([^"]+)"'
+              )
+
+              foreach ($match in $matches) {
+                  $value = $match.Groups[1].Value
+
+                  if ($value -ne 'DontSaveSensitive') {
+                      $relative = Resolve-Path -Relative $file.FullName
+                      $errors += "$relative has ProtectionLevel='$value'"
+                  }
+              }
+          }
+
+          if ($errors.Count -gt 0) {
+              Write-Host "SSIS files must use DontSaveSensitive before commit."
+              Write-Host ""
+
+              foreach ($error in $errors) {
+                  Write-Host "::error::$error"
+              }
+
+              exit 1
+          }
+
+          Write-Host "All SSIS projects/packages use DontSaveSensitive."

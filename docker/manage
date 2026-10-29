@@ -1,0 +1,224 @@
+#!/bin/bash
+export MSYS_NO_PATHCONV=1
+set -e
+
+SCRIPT_HOME="$(cd "$(dirname "$0")" && pwd)"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME-unified-scheduling}"
+
+# =================================================================================================================
+# Usage:
+# -----------------------------------------------------------------------------------------------------------------
+usage() {
+  cat <<-EOF
+
+  Usage: $0 {start|debug|stop|build|rm|down}
+
+  Options:
+
+  build - Pull the prebuilt Oracle image defined in docker-compose.yaml.
+          This project has no local Docker images to build.
+
+          Examples:
+          - Prepare all images:
+            $0 build
+          - Prepare the Oracle image:
+            $0 build oracle
+
+          Containers:
+            - oracle
+
+    start - Creates and starts the Oracle container based on the
+      docker-compose.yaml file. Oracle init scripts run only when its data volume
+          is first initialized; existing data is not removed.
+          Example:
+            $0 start
+
+    debug - Starts the Oracle container using the debug command path.
+          Example:
+            $0 debug
+
+  stop - Stops the services.  This is a non-destructive process.  The containers
+         are not deleted so they will be reused the next time you run start.
+
+  down | rm - Brings down the services and removes the volumes (storage) and containers. Destructive.
+EOF
+exit 1
+}
+# -----------------------------------------------------------------------------------------------------------------
+# Default Settings:
+# -----------------------------------------------------------------------------------------------------------------
+RUNTIME_CONTAINERS="oracle"
+DEBUG_CONTAINERS="oracle"
+# -----------------------------------------------------------------------------------------------------------------
+# Functions:
+# -----------------------------------------------------------------------------------------------------------------
+build-all() {
+  build-oracle
+}
+
+build-oracle() {
+  echo -e "\n\n===================================================================================================="
+  echo -e "Pulling the Oracle image using Docker ..."
+  echo -e "----------------------------------------------------------------------------------------------------"
+  docker-compose pull oracle
+  echo -e "===================================================================================================="
+}
+
+configureEnvironment () {
+
+  if [ -f .env ]; then
+    echo -e "\nLoading environment variables from .env ...\n"
+    source .env
+  fi
+
+  for arg in $@; do
+    case "$arg" in
+      *=*)
+        export ${arg}
+        ;;
+    esac
+  done
+
+  # Default database startup parameters
+  export POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE:-unifieddb}
+  export POSTGRESQL_USER=${POSTGRESQL_USER:-uniuser}
+  export POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD:-unipassword}
+  export POSTGRESQL_ADMIN_PASSWORD=${POSTGRESQL_ADMIN_PASSWORD:-admin123}
+
+  export KeycloakAuthority=${KeycloakAuthority}
+  export KeycloakClient=${KeycloakClient}
+  export KeycloakSecret=${KeycloakSecret}
+  export KeycloakAudience=${KeycloakAudience}
+  
+
+  # Default API startup parameters
+  export API_URL=${API_URL-http://api:5000/api/}
+  
+  # Default web startup parameters
+  export WEB_BASE_HREF=${WEB_BASE_HREF}
+}
+
+getStartupParams() {
+  CONTAINERS=""
+  ARGS=""
+
+  for arg in $@; do
+    case "$arg" in
+      *=*)
+        # Skip it
+        ;;
+     -*)
+        ARGS+=" $arg";;
+      *)
+        CONTAINERS+=" $arg";;
+    esac
+  done
+
+  if [ -z "$CONTAINERS" ]; then
+      if [ -z "$DEBUG_MODE" ]; then
+        CONTAINERS="$RUNTIME_CONTAINERS"
+      else
+        CONTAINERS="$DEBUG_CONTAINERS"
+      fi
+  fi
+
+  echo ${ARGS} ${CONTAINERS}
+}
+
+requireOracleCredentials() {
+  case " ${1} " in
+    *" oracle "*)
+      if [ -z "${ORACLE_PASSWORD:-}" ] || [ -z "${ETL_TARGET_PASSWORD:-}" ]; then
+        echo "Oracle startup requires ORACLE_PASSWORD and ETL_TARGET_PASSWORD."
+        echo "Set them in your local environment or manage configuration before starting Oracle."
+        exit 1
+      fi
+      ;;
+  esac
+}
+
+toLower() {
+  echo $(echo ${@} | tr '[:upper:]' '[:lower:]')
+}
+
+functionExists() {
+  (
+    if [ ! -z ${1} ] && type ${1} &>/dev/null; then
+      return 0
+    else
+      return 1
+    fi
+  )
+}
+
+deleteVolumes() {
+  _projectName=${COMPOSE_PROJECT_NAME:-docker}
+
+  echo "Stopping and removing any running containers ..."
+  docker-compose down -v
+
+  _pattern="^${_projectName}_\|^docker_"
+  _volumes=$(docker volume ls -q | grep ${_pattern} | cat)
+
+  if [ ! -z "${_volumes}" ]; then
+    echo "Removing project volumes ..."
+    echo ${_volumes} | xargs docker volume rm
+  else
+    echo "No project volumes exist."
+  fi
+
+  echo "Removing build cache ..."
+  rm -Rf ../api/bin
+  rm -Rf ../api/obj
+  rm -Rf ../db/bin
+  rm -Rf ../db/obj
+}
+# =================================================================================================================
+
+pushd ${SCRIPT_HOME} >/dev/null
+COMMAND=$(toLower ${1})
+shift
+
+case "$COMMAND" in
+  start)
+    _startupParams=$(getStartupParams $@)
+    configureEnvironment $@
+    requireOracleCredentials "${_startupParams}"
+    docker-compose up ${_startupParams}
+    ;;
+  debug)
+    export DEBUG_MODE=1
+    _startupParams=$(getStartupParams $@)
+    configureEnvironment $@
+    requireOracleCredentials "${_startupParams}"
+    docker-compose up ${_startupParams}
+    ;;
+  stop)
+    docker-compose stop
+    ;;
+  rm|down)
+    configureEnvironment
+    deleteVolumes
+    ;;
+  build)
+    buildImage=$(toLower ${1})
+    shift || buildImage=all
+    buildImage=$(echo ${buildImage} | sed s~^vcr-~~)
+    case "$buildImage" in
+      *=*)
+        buildImage=all
+        ;;
+    esac
+
+    if functionExists "build-${buildImage}"; then
+      eval "build-${buildImage}"
+    else
+      echo -e "Error:\nThe build function, build-${buildImage}, does not exist.  Please check your build parameters and try again.\nUse '-h' to get full help details."
+      exit 1
+    fi
+    ;;
+  *)
+    usage
+esac
+
+popd >/dev/null

@@ -2,6 +2,10 @@
 -- BCSS Stats - Oracle Indexes (Staging)
 -- ============================================================================
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CURRENT_SCHEMA = ETL_TARGET;
+
 -- StatCategories
 CREATE INDEX IX_STAT_CAT_GROUP_ID ON STAT_CATEGORIES (GROUP_ID);
 

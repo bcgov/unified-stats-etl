@@ -9,6 +9,10 @@
 -- is not replicated. The FK relationships are enforced at the source (PostgreSQL).
 -- xmin (PostgreSQL row version) is excluded as it has no Oracle equivalent.
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE
+ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CURRENT_SCHEMA = ETL_TARGET;
+
 -- ============================================================================
 -- 1. STAT_GROUPS
 -- ============================================================================
@@ -20,7 +24,8 @@ CREATE TABLE STAT_GROUPS
      CREATED_BY_ID       VARCHAR2(36 BYTE),
      CREATED_ON          TIMESTAMP(3)    NOT NULL,
      UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
+     UPDATED_ON          TIMESTAMP(3),
+     IS_LOCATION_LEVEL   NUMBER(1)       NOT NULL
     )
 ;
 
@@ -60,7 +65,8 @@ CREATE TABLE SUB_CATEGORIES
      CREATED_BY_ID       VARCHAR2(36 BYTE),
      CREATED_ON          TIMESTAMP(3)    NOT NULL,
      UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
+     UPDATED_ON          TIMESTAMP(3),
+     IS_ARCHIVED         NUMBER(1)       NOT NULL
     )
 ;
 
@@ -98,7 +104,9 @@ CREATE TABLE SUB_CATEGORY_METRICS
      CREATED_BY_ID       VARCHAR2(36 BYTE),
      CREATED_ON          TIMESTAMP(3)    NOT NULL,
      UPDATED_BY_ID       VARCHAR2(36 BYTE),
-     UPDATED_ON          TIMESTAMP(3)
+     UPDATED_ON          TIMESTAMP(3),
+     IS_REQUIRED         NUMBER(1)       NOT NULL,
+     IS_ARCHIVED         NUMBER(1)       NOT NULL
     )
 ;
 
@@ -125,7 +133,8 @@ CREATE TABLE STAT_RECORDS
      CREATED_BY_ID           VARCHAR2(36 BYTE),
      CREATED_ON              TIMESTAMP(3)    NOT NULL,
      UPDATED_BY_ID           VARCHAR2(36 BYTE),
-     UPDATED_ON              TIMESTAMP(3)
+     UPDATED_ON              TIMESTAMP(3),
+     PERFORMED_AT_LOCATION_ID             NUMBER(10)      NULL
     )
 ;
 
