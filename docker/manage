@@ -15,22 +15,17 @@ usage() {
 
   Options:
 
-  build - Build the docker images for the project.
-          You need to do this first, since the builds require some s2i builds.
-          You can build individual components as shown below, components that have dependencies
-          will have these dependencies built too.  By default all components are built.
+  build - Pull the prebuilt Oracle image defined in docker-compose.yaml.
+          This project has no local Docker images to build.
 
           Examples:
-          - Build everything:
+          - Prepare all images:
             $0 build
-          - Build the api only:
-            $0 build api
-          - Build the web only:
-            $0 build web-dev
+          - Prepare the Oracle image:
+            $0 build oracle
 
           Containers:
-            - api
-            - web-dev
+            - oracle
 
     start - Creates and starts the Oracle container based on the
       docker-compose.yaml file. Oracle init scripts run only when its data volume
@@ -58,54 +53,14 @@ DEBUG_CONTAINERS="oracle"
 # Functions:
 # -----------------------------------------------------------------------------------------------------------------
 build-all() {
-  build-web
-  build-api
+  build-oracle
 }
 
-build-api() {
-  #
-  # api
-  #
+build-oracle() {
   echo -e "\n\n===================================================================================================="
-  echo -e "Building api image using docker ..."
+  echo -e "Pulling the Oracle image using Docker ..."
   echo -e "----------------------------------------------------------------------------------------------------"
-  docker build \
-    -t "${COMPOSE_PROJECT_NAME}-api" \
-    -f './api/Dockerfile.dev' '..'
-
-  echo -e "===================================================================================================="
-}
-
-build-web() {
-  #
-  # web-dev
-  #
-  echo -e "\n\n===================================================================================================="
-  echo -e "Building the ${COMPOSE_PROJECT_NAME}-web (dev) image using Docker ..."
-  echo -e "----------------------------------------------------------------------------------------------------"
-  docker build \
-    -t "${COMPOSE_PROJECT_NAME}-web" \
-    --build-arg NODE_VERSION=22 \
-    --build-arg VITE_PORT=8080 \
-    --build-arg WEB_SRC='./web' \
-    -f './web/Dockerfile.dev' '..'
-  echo -e "===================================================================================================="
-}
-
-build-web-prod() {
-  #
-  # web-prod (production image with S2I for testing)
-  #
-  echo -e "\n\n===================================================================================================="
-  echo -e "Building the ${COMPOSE_PROJECT_NAME}-web-prod (production) image using Docker ..."
-  echo -e "----------------------------------------------------------------------------------------------------"
-  docker build \
-    -t "${COMPOSE_PROJECT_NAME}-web-prod" \
-    --build-arg NODE_VERSION=22 \
-    --build-arg WEB_SRC='../web' \
-    --build-arg NGINX_RUNTIME_SRC='./nginx-runtime' \
-    --build-arg VUE_ON_NGINX_SRC='./vue-on-nginx' \
-    -f './web/Dockerfile' '.'
+  docker-compose pull oracle
   echo -e "===================================================================================================="
 }
 
@@ -246,13 +201,6 @@ case "$COMMAND" in
     deleteVolumes
     ;;
   build)
-    S2I_EXE=s2i
-    if [ -z "$(type -P "$S2I_EXE")" ]; then
-      echo -e "The ${S2I_EXE} executable is needed and not on your path."
-      echo -e "It can be downloaded from here: https://github.com/openshift/source-to-image"
-      echo -e "Make sure you place it in a directory on your path."
-      exit 1
-    fi
     buildImage=$(toLower ${1})
     shift || buildImage=all
     buildImage=$(echo ${buildImage} | sed s~^vcr-~~)

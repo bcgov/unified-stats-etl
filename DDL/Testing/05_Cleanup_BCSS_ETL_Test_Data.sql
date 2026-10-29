@@ -13,7 +13,7 @@ params AS
 (
     SELECT
         /* EDIT */
-        'BCSS_ORACLE_ETL_MAPPING_TEST|20261005_A'::text AS test_run_key
+        'BCSS_ORACLE_ETL_MAPPING_TEST|20261101_A'::text AS test_run_key
 )
 SELECT
     sr."Id"                    AS "StatRecordId",
@@ -50,7 +50,7 @@ WITH
 params AS
 (
     SELECT
-        'BCSS_ORACLE_ETL_MAPPING_TEST|20261005_A'::text AS test_run_key
+        'BCSS_ORACLE_ETL_MAPPING_TEST|20261101_A'::text AS test_run_key
 )
 DELETE FROM "StatRecords" sr
 USING params p

@@ -5,6 +5,13 @@ Unified -> PostgreSQL staging -> Oracle ETL.
 
 ## Files
 
+0. `00_Validate_Expanded_Legacy_Seed_Coverage.sql`
+   - Read-only, independent contract for PR #419's 63 new source SCMs and 145
+     additional Oracle mapping contributions (including auto sums and fan-out).
+   - Detects missing/wrong taxonomy, incorrect source-to-target mappings,
+     archived/inactive required stats, and unarchived retired entry paths.
+   - Must PASS before running the mapping fixture.
+
 1. `01_Create_BCSS_ETL_Test_Data.sql`
    - Inserts exactly one SignedOff `StatRecord` for every distinct mapped
      `SubCategoryMetricId` in the mapping set applicable to the requested reporting month.
@@ -31,9 +38,12 @@ Unified -> PostgreSQL staging -> Oracle ETL.
    - Reports missing or ambiguous mapping sets/crosswalks, missing fixtures, duplicate
      stage cells, value/count/Location Level mismatches, and missing or extra cells.
 
-4. `04_Generate_Oracle_Validation.sql`
-   - Reconstructs expected Oracle values.
-   - Generates Oracle SQL for logical-row validation and cell-by-cell validation.
+4. `04_Generate_Oracle_Validation_From_Stage.sql`
+   - Generates Oracle SQL from the verified PostgreSQL stage cells, including
+     every PR #419 holding-cell, transport, and additional aggregate target.
+   - Run the generated SQL in Oracle; every result must PASS.
+   - `04_Generate_Oracle_Validation.sql` is an *existing static September 2026
+     sample*, not a generator; do not use it to validate the expanded fixture.
 
 5. `05_Cleanup_BCSS_ETL_Test_Data.sql`
    - Previews the exact test records.
@@ -41,14 +51,33 @@ Unified -> PostgreSQL staging -> Oracle ETL.
 
 ## Execution order
 
-1. Edit and run `01_Create_BCSS_ETL_Test_Data.sql`.
+0. Deploy the PR #419 seeders and mapping data, then run
+   `00_Validate_Expanded_Legacy_Seed_Coverage.sql`. It must return PASS.
+1. Edit and run `01_Create_BCSS_ETL_Test_Data.sql`, using an isolated
+   reporting month **on or after 2026-11-01** (the new mapping set's effective date).
 2. Optionally run `02_Review_BCSS_ETL_Test_Data.sql`.
 3. Run the normal SSIS package and record its `LoadId`.
 4. Edit the `TestRunKey`, `LoadId`, reporting month, and `CRT_LOC_ID`, then run
    `03_Validate_PostgreSQL_Stage.sql`. Every row must be `PASS` with
    `DifferenceCount = 0`.
-5. Edit and run `04_Generate_Oracle_Validation.sql`; copy the generated SQL into Oracle.
+5. Edit and run `04_Generate_Oracle_Validation_From_Stage.sql` in PostgreSQL,
+   copy its generated SQL into Oracle, and verify every Oracle row returns PASS.
 6. When finished, preview and deliberately execute `05_Cleanup_BCSS_ETL_Test_Data.sql`.
+
+## Expanded legacy stats assertion
+
+The independent step 00 checks all 12 holding-cell counts, all 48 Air/Ground
+transport demographics/classifications, Circuit Court trips, and non-frontline
+supervisory regular/OT hours (SCMs 449-511). It also checks Federal-only
+transport detail (excluded from demographic and level totals), 24 existing
+Air/Ground staff-hour contributions, the Received/Concluded source mappings,
+and retired coarse stats. This is deliberately independent of the mapping
+table used to generate fixture rows.
+
+Step 01 fails unless the selected mapping set has 661 active mapping rows,
+145 newly added contributions and all 63 new SCMs. Step 03 ensures each
+active mapped SCM has exactly one fixture row; this prevents a missing source
+row from passing just because no expected stage cell was generated.
 
 ## Deterministic values
 

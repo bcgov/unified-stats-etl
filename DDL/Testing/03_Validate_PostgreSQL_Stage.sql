@@ -11,9 +11,9 @@ params AS
 (
     SELECT
         /* EDIT: fixture comment prefix, SSIS run, and explicit stage scope. */
-        'BCSS_ORACLE_ETL_MAPPING_TEST|20261005_A'::text AS test_run_key,
+        'BCSS_ORACLE_ETL_MAPPING_TEST|20261101_A'::text AS test_run_key,
         '00000000-0000-0000-0000-000000000000'::uuid AS load_id,
-        DATE '2026-09-01' AS reporting_month,
+        DATE '2026-11-01' AS reporting_month,
         310::integer AS crt_loc_id
 ),
 test_records AS
@@ -66,6 +66,25 @@ effective_location_mappings AS
      AND lm."EffectiveDate" <= p.reporting_month
      AND (lm."ExpiryDate" IS NULL OR lm."ExpiryDate" >= p.reporting_month)
     GROUP BY fl.location_id
+),
+required_scms AS
+(
+    SELECT DISTINCT m."SubCategoryMetricId" AS scm_id
+      FROM etl."BiOracleStatMappings" m
+      JOIN selected_mapping_set ms ON ms.mapping_set_id = m."MappingSetId"
+      JOIN "SubCategoryMetrics" scm ON scm."Id" = m."SubCategoryMetricId"
+      JOIN "SubCategories" sc ON sc."Id" = scm."SubCategoryId"
+      JOIN "StatCategories" cat ON cat."Id" = sc."CategoryId"
+     WHERE COALESCE(scm."IsArchived", FALSE) = FALSE
+       AND COALESCE(sc."IsArchived", FALSE) = FALSE
+       AND COALESCE(cat."IsArchived", FALSE) = FALSE
+),
+fixture_coverage AS
+(
+    SELECT m.scm_id, COUNT(tr."Id") AS fixture_count
+      FROM required_scms m
+      LEFT JOIN test_records tr ON tr."SubCategoryMetricId" = m.scm_id
+     GROUP BY m.scm_id
 ),
 mapped_rows AS
 (
@@ -249,7 +268,19 @@ checks AS
          WHERE mapping_count = 1 AND crt_loc_id IS DISTINCT FROM p.crt_loc_id)
             AS out_of_scope_location_count,
         (SELECT COUNT(*) FROM expected_cells) AS expected_count,
-        (SELECT COUNT(*) FROM actual_cells) AS actual_count
+        (SELECT COUNT(*) FROM actual_cells) AS actual_count,
+        (SELECT COUNT(*) FROM etl."BiOracleStatMappings" m
+          JOIN selected_mapping_set ms ON ms.mapping_set_id = m."MappingSetId")
+            AS mapping_row_count,
+        (SELECT COUNT(*) FROM test_records
+          WHERE "SubCategoryMetricId" BETWEEN 449 AND 511)
+            AS expanded_fixture_count,
+        (SELECT COUNT(*) FROM fixture_coverage WHERE fixture_count <> 1)
+            AS missing_or_duplicate_fixture_scm_count,
+        (SELECT COUNT(*) FROM test_records tr
+          WHERE NOT EXISTS (SELECT 1 FROM required_scms m
+             WHERE m.scm_id = tr."SubCategoryMetricId"))
+            AS unmapped_fixture_scm_count
     FROM params p
 ),
 validation_failures AS
@@ -276,6 +307,10 @@ validation_failures AS
                 OR p.load_id IS NULL OR p.reporting_month IS NULL OR p.crt_loc_id IS NULL
                 OR p.reporting_month <> DATE_TRUNC('month', p.reporting_month)::date),
             ('MISSING_TEST_FIXTURE', c.fixture_count = 0),
+            ('INCOMPLETE_MAPPING_SET', c.mapping_row_count <> 661),
+            ('INCOMPLETE_EXPANDED_FIXTURE', c.expanded_fixture_count <> 63),
+            ('MISSING_OR_DUPLICATE_MAPPED_FIXTURE_SCM', c.missing_or_duplicate_fixture_scm_count > 0),
+            ('UNMAPPED_FIXTURE_SCM', c.unmapped_fixture_scm_count > 0),
             ('NO_APPLICABLE_MAPPING_SET', c.applicable_set_count = 0),
             ('MULTIPLE_APPLICABLE_MAPPING_SETS', c.applicable_set_count > 1),
             ('FIXTURE_MAPPING_SET_MISMATCH', c.wrong_set_count > 0),

@@ -3,7 +3,6 @@
   01_Create_BCSS_ETL_Test_Data.sql
 ===============================================================================
 */
-
 BEGIN;
 
 DO
@@ -13,14 +12,14 @@ DECLARE
     -- EDIT THESE PARAMETERS
     ---------------------------------------------------------------------------
     v_location_id               integer := 12345;
-    v_user_id                   uuid    := '00000000-0000-0000-0000-000000000000'::uuid;
-    v_reporting_month           date    := DATE '2026-09-01';
+    v_user_id                   uuid    := '00000000-0000-0000-0000-000000000001'::uuid;
+    v_reporting_month           date    := DATE '2026-11-01';
 
     -- NULL means use v_location_id.
-    v_performed_at_location_id  integer := NULL;
+    v_performed_at_location_id  integer := 6;
 
     -- Must be unique for this test execution.
-    v_test_run_key              text    := 'BCSS_ORACLE_ETL_MAPPING_TEST|20261005_A';
+    v_test_run_key              text    := 'BCSS_ORACLE_ETL_MAPPING_TEST|20261101_A';
 
     ---------------------------------------------------------------------------
     -- Resolved / working values
@@ -30,6 +29,8 @@ DECLARE
     v_mapping_set_count         integer;
     v_mapping_row_count         integer;
     v_distinct_scm_count        integer;
+    v_expanded_scm_count        integer;
+    v_added_mapping_count       integer;
     v_inserted_non_ot           integer;
     v_inserted_ot               integer;
     v_existing_count            integer;
@@ -152,8 +153,27 @@ BEGIN
        AND COALESCE(sc."IsArchived", FALSE) = FALSE
        AND COALESCE(cat."IsArchived", FALSE) = FALSE;
 
-    IF v_mapping_row_count = 0 THEN
-        RAISE EXCEPTION 'MappingSetId % contains no eligible mappings.', v_mapping_set_id;
+    -- PR #419 (SS-1107) mapping set is effective 2026-11-01.
+    -- Fail closed if the holding-cell / transport expansion was not seeded.
+    SELECT COUNT(*) FILTER (WHERE m."Id" BETWEEN 517 AND 661),
+           COUNT(DISTINCT m."SubCategoryMetricId") FILTER
+               (WHERE m."SubCategoryMetricId" BETWEEN 449 AND 511)
+      INTO v_added_mapping_count, v_expanded_scm_count
+      FROM etl."BiOracleStatMappings" m
+      JOIN "SubCategoryMetrics" scm ON scm."Id" = m."SubCategoryMetricId"
+      JOIN "SubCategories" sc ON sc."Id" = scm."SubCategoryId"
+      JOIN "StatCategories" cat ON cat."Id" = sc."CategoryId"
+     WHERE m."MappingSetId" = v_mapping_set_id
+       AND COALESCE(scm."IsArchived", FALSE) = FALSE
+       AND COALESCE(sc."IsArchived", FALSE) = FALSE
+       AND COALESCE(cat."IsArchived", FALSE) = FALSE;
+
+    IF v_mapping_row_count <> 661
+       OR v_added_mapping_count <> 145
+       OR v_expanded_scm_count <> 63 THEN
+        RAISE EXCEPTION
+            'Expanded legacy stats seed incomplete: expected 661 active mapping rows (found %), 145 added mappings (found %), and 63 new SCMs (found %). Run step 00 first.',
+            v_mapping_row_count, v_added_mapping_count, v_expanded_scm_count;
     END IF;
 
     ---------------------------------------------------------------------------
@@ -447,6 +467,8 @@ BEGIN
     RAISE NOTICE 'CRT_LOC_ID: %', v_crt_loc_id;
     RAISE NOTICE 'MappingSetId: %', v_mapping_set_id;
     RAISE NOTICE 'Mapping rows covered: %', v_mapping_row_count;
+    RAISE NOTICE 'Expanded source SCMs covered: %', v_expanded_scm_count;
+    RAISE NOTICE 'New mapping contributions covered: %', v_added_mapping_count;
     RAISE NOTICE 'Distinct mapped SCMs inserted: %', v_distinct_scm_count;
     RAISE NOTICE 'Non-OT records inserted: %', v_inserted_non_ot;
     RAISE NOTICE 'OT records inserted: %', v_inserted_ot;
